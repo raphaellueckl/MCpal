@@ -1,10 +1,15 @@
 package controller;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Timer;
 
 public class App {
 
@@ -18,47 +23,58 @@ public class App {
 
     public static void main(String... args) throws IOException {
 
-        String fromPath;
-        String toPath;
+        final String fromPath;
+        final String toPath;
+
         if (args.length == 2) {
             fromPath = args[0];
             toPath = args[1];
         } else {
             URL workingDirectory = App.class.getProtectionDomain().getCodeSource().getLocation();
 
-            RandomAccessFile aFile = new RandomAccessFile(
-                    workingDirectory + "config.cfg", "r");
-            FileChannel inChannel = aFile.getChannel();
-            long fileSize = inChannel.size();
-            ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
-            inChannel.read(buffer);
-            //buffer.rewind();
-            buffer.flip();
-            for (int i = 0; i < fileSize; i++)
-            {
-                System.out.print((char) buffer.get());
-            }
-            inChannel.close();
-            aFile.close();
+            final List<String> arguments = Files.readAllLines(Paths.get(workingDirectory + "config.cfg"));
+            if (arguments.size() != 2) throw new RuntimeException("Invalid input parameters");
+
+            fromPath = arguments.get(0);
+            toPath = arguments.get(1);
         }
 
-
+        Backup backup = new Backup(fromPath, toPath);
 
         final ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.directory(new File("C:/Users/Raphael/Desktop/New folder (4)/"));
-        processBuilder.command("java", "-jar", "server.jar");
+        processBuilder.directory(fromPath));
+        processBuilder.command("java", "-jar", "server.jar", "nogui");
         Process process = processBuilder.start();
 
         MinecraftConsole console = new MinecraftConsole(process.getInputStream());
         new Thread(console).start();
 
-        fromPath = "C:\\Users\\Raphael\\Desktop\\Folder 1";
-        toPath = "C:\\Users\\Raphael\\Desktop\\Folder 2\\destinationfolder";
-
-        Backup backup = new Backup(fromPath, toPath);
 
         App app = new App(fromPath, toPath);
         app.startTransfer();
+
+        Timer timer = new Timer();
+        Calendar date = Calendar.getInstance();
+        date.set(
+                Calendar.DAY_OF_WEEK,
+                Calendar.SUNDAY
+        );
+        date.set(Calendar.HOUR, 0);
+        date.set(Calendar.MINUTE, 0);
+        date.set(Calendar.SECOND, 0);
+        date.set(Calendar.MILLISECOND, 0);
+        // Schedule to run every Sunday in midnight
+        timer.schedule(
+                new DailyBackupTask(),
+                date.getTime(),
+                1000 * 60 * 60 * 24 * 7
+        );
+
+
+
+
+
+
 
     }
 
