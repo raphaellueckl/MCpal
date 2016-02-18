@@ -2,8 +2,9 @@ package controller;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.concurrent.Callable;
 
-public class Backup {
+public class Backup implements Callable<Integer> {
 
     private final Path sourceDirPath;
     private final Path targetDirPath;
@@ -13,11 +14,11 @@ public class Backup {
         this.targetDirPath = Paths.get(targetDirPath);
     }
 
-    public void startTransfer() {
-        synchronize(sourceDirPath);
+    public int startTransfer() {
+        return synchronize(sourceDirPath);
     }
 
-    private void synchronize(Path currentFolder) {
+    private int synchronize(Path currentFolder) {
         try {
             DirectoryStream<Path> directoryStream = Files.newDirectoryStream(currentFolder);
             for (final Path currentElement : directoryStream) {
@@ -30,8 +31,15 @@ public class Backup {
                     Files.copy(currentElement, targetPath, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+            return 0;
         } catch (IOException e) {
             e.printStackTrace();
+            return -1;
         }
+    }
+
+    @Override
+    public Integer call() throws Exception {
+        return synchronize(sourceDirPath);
     }
 }

@@ -1,8 +1,6 @@
 package controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -16,42 +14,52 @@ public class App {
     private final Path sourceDirPath;
     private final Path targetDirPath;
 
-    public App(String sourceDir, String targetDir) {
+
+    public App(String... args) {
         this.sourceDirPath = Paths.get(sourceDir);
         this.targetDirPath = Paths.get(targetDir);
+
+        final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        final String toPath;
+        final String maxHeapSize;
+        final String jarName;
+        URL workingDirectory = App.class.getProtectionDomain().getCodeSource().getLocation();
+
+        if (args.length == 3) {
+            toPath = args[0];
+            maxHeapSize = args[1];
+            jarName = args[2];
+        } else if (Files.exists(Paths.get(workingDirectory + "MCpal_config.cfg"))) {
+            final List<String> arguments = Files.readAllLines(Paths.get(workingDirectory + "MCpal_config.cfg"));
+            if (arguments.size() != 3) throw new RuntimeException("Invalid input parameters");
+            Files.delete(Paths.get(workingDirectory + "MCpal_config.cfg"));
+            toPath = arguments.get(0);
+            maxHeapSize = arguments.get(1);
+            jarName = arguments.get(2);
+        } else {
+            throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
+                    "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
+                    "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
+        }
     }
 
-    public static void main(String... args) throws IOException {
+    public void start() {
 
-        final String fromPath;
-        final String toPath;
 
-        if (args.length == 2) {
-            fromPath = args[0];
-            toPath = args[1];
-        } else {
-            URL workingDirectory = App.class.getProtectionDomain().getCodeSource().getLocation();
-
-            final List<String> arguments = Files.readAllLines(Paths.get(workingDirectory + "config.cfg"));
-            if (arguments.size() != 2) throw new RuntimeException("Invalid input parameters");
-
-            fromPath = arguments.get(0);
-            toPath = arguments.get(1);
-        }
-
-        Backup backup = new Backup(fromPath, toPath);
+        Backup backupTask = new Backup(fromPath, toPath);
 
         final ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.directory(fromPath));
+        processBuilder.directory(new File(fromPath));
         processBuilder.command("java", "-jar", "server.jar", "nogui");
         Process process = processBuilder.start();
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+        out.write("stop");
+        process.destroy();
 
-        MinecraftConsole console = new MinecraftConsole(process.getInputStream());
-        new Thread(console).start();
+        MinecraftConsole consoleMonitor = new MinecraftConsole(process.getInputStream());
+        new Thread(consoleMonitor).start();
 
-
-        App app = new App(fromPath, toPath);
-        app.startTransfer();
+        DailyBackupTask dailyTask = new DailyBackupTask(consoleMonitor, backupTask, new File(fromPath));
 
         Timer timer = new Timer();
         Calendar date = Calendar.getInstance();
@@ -65,39 +73,16 @@ public class App {
         date.set(Calendar.MILLISECOND, 0);
         // Schedule to run every Sunday in midnight
         timer.schedule(
-                new DailyBackupTask(),
+                dailyTask,
                 date.getTime(),
                 1000 * 60 * 60 * 24 * 7
         );
-
-
-
-
-
-
-
     }
 
-    public void startTransfer() {
-        synchronize(sourceDirPath);
-    }
+    public static void main(String... args) throws IOException {
 
-    private void synchronize(Path currentFolder) {
-        try {
-            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(currentFolder);
-            for (final Path currentElement : directoryStream) {
-                if (Files.isDirectory(currentElement)) synchronize(currentElement);
-                else if (Files.isRegularFile(currentElement)) {
-                    final Path relativePath = sourceDirPath.relativize(currentElement);
-                    Path targetPath = targetDirPath.resolve(relativePath);
-                    if (!Files.exists(targetPath))
-                        Files.createDirectories(targetPath.getParent());
-                    Files.copy(currentElement, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
+        final App MCpal = new App(args);
+        MCpal.start();
+    }
 }
