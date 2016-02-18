@@ -20,8 +20,6 @@ public class DailyBackupTask extends TimerTask {
             consoleWriter.write(Constants.STOP_COMMAND);
             Thread.sleep(2000);
 
-
-
             FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
             new Thread(futureTask).start();
             Integer result = futureTask.get();

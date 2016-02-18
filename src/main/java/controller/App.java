@@ -2,8 +2,6 @@ package controller;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.Calendar;
 import java.util.List;
@@ -11,14 +9,21 @@ import java.util.Timer;
 
 public class App {
 
-    private final Path sourceDirPath;
-    private final Path targetDirPath;
+    public final Path SOURCE_DIR_PATH;
+    public final Path TARGET_DIR_PATH;
+    public final String MAX_HEAP_SIZE;
+    public final String JAR_NAME;
 
 
-    public App(String... args) {
-        this.sourceDirPath = Paths.get(sourceDir);
-        this.targetDirPath = Paths.get(targetDir);
+    public App(String sourceDir, String targetDir, String MAX_HEAP_SIZE, String jarName) {
+        this.MAX_HEAP_SIZE = MAX_HEAP_SIZE;
+        this.JAR_NAME = jarName;
+        this.SOURCE_DIR_PATH = Paths.get(sourceDir);
+        this.TARGET_DIR_PATH = Paths.get(targetDir);
+    }
 
+
+    public static void main(String... args) throws IOException {
         final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         final String toPath;
         final String maxHeapSize;
@@ -41,10 +46,6 @@ public class App {
                     "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
                     "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
         }
-    }
-
-    public void start() {
-
 
         Backup backupTask = new Backup(fromPath, toPath);
 
@@ -52,14 +53,14 @@ public class App {
         processBuilder.directory(new File(fromPath));
         processBuilder.command("java", "-jar", "server.jar", "nogui");
         Process process = processBuilder.start();
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-        out.write("stop");
+        BufferedWriter consoleWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+        consoleWriter.write("stop");
         process.destroy();
 
         MinecraftConsole consoleMonitor = new MinecraftConsole(process.getInputStream());
         new Thread(consoleMonitor).start();
 
-        DailyBackupTask dailyTask = new DailyBackupTask(consoleMonitor, backupTask, new File(fromPath));
+        DailyBackupTask dailyTask = new DailyBackupTask(backupTask, consoleWriter);
 
         Timer timer = new Timer();
         Calendar date = Calendar.getInstance();
@@ -77,12 +78,5 @@ public class App {
                 date.getTime(),
                 1000 * 60 * 60 * 24 * 7
         );
-    }
-
-    public static void main(String... args) throws IOException {
-
-
-        final App MCpal = new App(args);
-        MCpal.start();
     }
 }
