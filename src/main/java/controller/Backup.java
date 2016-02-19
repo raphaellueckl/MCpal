@@ -9,13 +9,9 @@ public class Backup implements Callable<Integer> {
     private final Path sourceDirPath;
     private final Path targetDirPath;
 
-    public Backup(String sourceDirPath, String targetDirPath) {
-        this.sourceDirPath = Paths.get(sourceDirPath);
-        this.targetDirPath = Paths.get(targetDirPath);
-    }
-
-    public int startTransfer() {
-        return synchronize(sourceDirPath);
+    public Backup(Path sourceDirPath, Path targetDirPath) {
+        this.sourceDirPath = sourceDirPath;
+        this.targetDirPath = targetDirPath;
     }
 
     private int synchronize(Path currentFolder) {
