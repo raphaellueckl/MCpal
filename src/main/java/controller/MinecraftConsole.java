@@ -16,13 +16,15 @@ public class MinecraftConsole implements Runnable {
     @Override
     public void run() {
         String line;
-        while (true) {
-            try {
+        try {
+            while ((line = consoleInputReader.readLine()) != null) {
+
                 line = consoleInputReader.readLine();
                 System.out.println(line);
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+                System.out.println("Dick");
             }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
     }
 }

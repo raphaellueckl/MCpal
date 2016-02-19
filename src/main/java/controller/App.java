@@ -32,7 +32,7 @@ public class App {
     public static void main(String... args) throws IOException {
         //final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         //final String fromPath = "C:/Users/rapha/Desktop/mc/";
-        final String fromPath = "C:\\Users\\rapha\\Desktop\\mc\\";
+        final String fromPath = "C:\\Users\\raphael\\Desktop\\mc\\";
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -61,9 +61,11 @@ public class App {
     private void start() throws IOException {
         Backup backupTask = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
 
-        final ProcessBuilder processBuilder = new ProcessBuilder();
+        final ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "-Xms" + MAX_HEAP_SIZE + "m",
+                "-Xmx" + MAX_HEAP_SIZE + "m", JAR_NAME , "nogui");
         processBuilder.directory(SOURCE_DIR_PATH.toFile());
-        processBuilder.command(START_COMMAND);
+//        processBuilder.command(START_COMMAND);
+//        processBuilder.command(START_COMMAND);
         Process process = processBuilder.start();
 
         BufferedWriter consoleWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
