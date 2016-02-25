@@ -22,8 +22,8 @@ public class App {
     private volatile Process serverProcess;
 
     public static void main(String... args) throws IOException {
-        //final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        final String fromPath = "C:/Users/rapha/Desktop/mc/";
+        final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        //final String fromPath = "C:/Users/rapha/Desktop/mc/";
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -32,10 +32,7 @@ public class App {
             toPath = args[0];
             maxHeapSize = args[1];
             jarName = args[2];
-
-            final BufferedWriter bufferedWriter = Files.newBufferedReader(Files.);
-            bufferedWriter.
-
+            writeConfigFile(fromPath, args);
         } else if (Files.exists(Paths.get(fromPath + CONFIG_FILE))) {
             final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILE));
             if (arguments.size() != 3) throw new RuntimeException("Invalid input parameters");
@@ -51,6 +48,16 @@ public class App {
 
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName);
         MCpal.start();
+    }
+
+    private static void writeConfigFile(String fromPath, String[] args) throws IOException {
+        Files.createFile(Paths.get(fromPath + CONFIG_FILE));
+        FileWriter fw = new FileWriter(fromPath + CONFIG_FILE);
+        for (String parameter : args) {
+            fw.write(parameter + System.getProperty("line.separator"));
+        }
+        fw.flush();
+        fw.close();
     }
 
 
@@ -113,8 +120,6 @@ public class App {
         try { process.waitFor(10, TimeUnit.SECONDS); } catch (InterruptedException e) { e.printStackTrace(); }
         process.destroy();
     }
-
-
 
     public class DailyBackupTask extends TimerTask {
 
