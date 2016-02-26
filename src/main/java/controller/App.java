@@ -1,15 +1,34 @@
 package controller;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class App {
 
-    public static final String CONFIG_FILE = "MCpal.cfg";
+    public static final String CONFIG_FILENAME = "MCpal.cfg";
 
     public final Path SOURCE_DIR_PATH;
     public final Path TARGET_DIR_PATH;
@@ -22,24 +41,27 @@ public class App {
     private volatile Process serverProcess;
 
     public static void main(String... args) throws IOException {
-        final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        //final String fromPath = "C:/Users/rapha/Desktop/mc/";
+//        final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+//        final Path fromPathPath = Paths.get(fromPath).getParent();
+//        final String fromPath = "C:/Users/ralu/Desktop/mc/";
+        final String fromPath;
         final String toPath;
         final String maxHeapSize;
         final String jarName;
-
-        if (args.length == 3) {
-            toPath = args[0];
-            maxHeapSize = args[1];
-            jarName = args[2];
+        if (args.length == 4) {
+            fromPath = args[0];
+            toPath = args[1];
+            maxHeapSize = args[2];
+            jarName = args[3];
             writeConfigFile(fromPath, args);
-        } else if (Files.exists(Paths.get(fromPath + CONFIG_FILE))) {
-            final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILE));
-            if (arguments.size() != 3) throw new RuntimeException("Invalid input parameters");
-            Files.delete(Paths.get(fromPath + CONFIG_FILE));
-            toPath = arguments.get(0);
-            maxHeapSize = arguments.get(1);
-            jarName = arguments.get(2);
+            checkEula(fromPath);
+//        } else if (Files.exists(Paths.get(fromPath + CONFIG_FILE))) {
+//            final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILE));
+//            if (arguments.size() != 4) throw new RuntimeException("Invalid input parameters");
+//            Files.delete(Paths.get(fromPath + CONFIG_FILE));
+//            toPath = arguments.get(0);
+//            maxHeapSize = arguments.get(1);
+//            jarName = arguments.get(2);
         } else {
             throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
                     "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
@@ -50,9 +72,33 @@ public class App {
         MCpal.start();
     }
 
+    private static void checkEula(String fromPath) {
+        try {
+            Path eulaPath = Paths.get(fromPath + "/" + "eula.txt");
+            File eulaFile = eulaPath.toFile();
+            //Irgendwie müsste die Eula generiert werden, wenn sie nicht vorhanden ist.
+            if (Files.exists(eulaPath)) {
+                List<String> readAllLines = Files.readAllLines(eulaPath);
+                final StringBuilder sb = new StringBuilder();
+                readAllLines.forEach(line -> sb.append(line + System.getProperty("line.separator")));
+                String eula = sb.toString();
+                if (eula.contains("eula=false")) {
+                    eula = eula.replace("eula=false", "eula=true");
+                    FileWriter fw = new FileWriter(eulaFile);
+                    fw.write(eula);
+                    fw.flush();
+                    fw.close();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void writeConfigFile(String fromPath, String[] args) throws IOException {
-        Files.createFile(Paths.get(fromPath + CONFIG_FILE));
-        FileWriter fw = new FileWriter(fromPath + CONFIG_FILE);
+        if (!Files.exists(Paths.get(fromPath + "/" + CONFIG_FILENAME)))
+            Files.createFile(Paths.get(fromPath + "/" + CONFIG_FILENAME));
+        FileWriter fw = new FileWriter(fromPath + "/" + CONFIG_FILENAME);
         for (String parameter : args) {
             fw.write(parameter + System.getProperty("line.separator"));
         }
@@ -72,61 +118,73 @@ public class App {
     }
 
     private void start() throws IOException {
-        Backup backupTask = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
+//        Backup backupTask = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
 
         serverProcess = startMinecraftServer();
 
-        DailyBackupTask dailyTask = new DailyBackupTask(backupTask);
 
-        Timer timer = new Timer();
-        Calendar date = Calendar.getInstance();
-        date.set(
-                Calendar.DAY_OF_WEEK,
-                Calendar.SUNDAY
-        );
-        date.set(Calendar.HOUR, 0);
-        date.set(Calendar.MINUTE, 0);
-        date.set(Calendar.SECOND, 0);
-        date.set(Calendar.MILLISECOND, 0);
-        // Schedule to run every Sunday in midnight
-        timer.schedule(
-                dailyTask,
-                date.getTime(),
-                //1000 * 60 * 60 * 24 * 7
-                1000 * 60 * 1 //1 minute
-        );
+        DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
+        final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        service.scheduleWithFixedDelay(dailyTask, 1, 1, TimeUnit.MINUTES);
     }
 
     public Process startMinecraftServer() {
+        Process process = null;
         try {
             final ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "-Xms" + MAX_HEAP_SIZE + "m",
                     "-Xmx" + MAX_HEAP_SIZE + "m", JAR_NAME , "nogui");
             processBuilder.directory(SOURCE_DIR_PATH.toFile());
-            final Process process = processBuilder.start();
+            process = processBuilder.start();
 
-            consoleThread.interrupt();
+            if (consoleThread != null) consoleThread.interrupt();
             consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
             consoleThread.start();
 
-            return process;
-        } catch (IOException ioe) { return null; }
+        } catch (IOException ioe) { ioe.printStackTrace(); }
+        return process;
     }
 
     public static void stopMinecraftServer(Process process) {
-        PrintWriter w = new PrintWriter(process.getOutputStream());
-        w.write("stop");
-        w.flush();
-        w.close();
+//        PrintWriter w = new PrintWriter(process.getOutputStream());
+        try {
+            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("say Serverbackup begins in 3...");
+            w.flush();
+            w.close();
+            try {Thread.sleep(1000);}catch (Exception e) {}
+            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("say 2...");
+            w.flush();
+            w.close();
+            try {Thread.sleep(1000);}catch (Exception e) {}
+            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("say 1...");
+            w.flush();
+            w.close();
+            try {Thread.sleep(1000);}catch (Exception e) {}
+            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("say GAME OVER!!!!!!!!!!!!!...");
+            w.flush();
+            w.close();
+            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("stop");
+            w.flush();
+            w.close();
+        }catch (Exception e) {
+            System.out.println("****************************" + e.getStackTrace());
+        }
         try { process.waitFor(10, TimeUnit.SECONDS); } catch (InterruptedException e) { e.printStackTrace(); }
         process.destroy();
     }
 
-    public class DailyBackupTask extends TimerTask {
+    public class DailyBackupTask implements Runnable {
 
-        private final Backup backupHandler;
+        private final Path sourceDir;
+        private final Path backupDir;
 
-        public DailyBackupTask(Backup backupTask) {
-            this.backupHandler = backupTask;
+        public DailyBackupTask(Path sourceDir, Path backupDir) {
+            this.sourceDir = sourceDir;
+            this.backupDir = backupDir;
         }
 
         @Override
@@ -135,6 +193,7 @@ public class App {
                 stopMinecraftServer(serverProcess);
                 Thread.sleep(2000);
 
+                Backup backupHandler = new Backup(sourceDir, backupDir);
                 FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
                 new Thread(futureTask).start();
                 Integer result = futureTask.get();
@@ -150,11 +209,23 @@ public class App {
     public class Backup implements Callable<Integer> {
 
         private final Path sourceDirPath;
-        private final Path targetDirPath;
+        private Path targetDirPath;
 
         public Backup(Path sourceDirPath, Path targetDirPath) {
             this.sourceDirPath = sourceDirPath;
             this.targetDirPath = targetDirPath;
+        }
+
+        @Override
+        public Integer call() throws Exception {
+            String backupFolderName = String.valueOf(LocalDateTime.now().getYear()) + "_" +
+                    (String.valueOf(LocalDateTime.now().getMonth().getValue()).length() == 1 ? "0" + String.valueOf(LocalDateTime.now().getMonth().getValue()) : String.valueOf(LocalDateTime.now().getMonth().getValue())) + "_" +
+                    String.valueOf(LocalDateTime.now().getDayOfMonth()) + "_" +
+                    String.valueOf(LocalDateTime.now().getNano());
+            String path = targetDirPath + "/" + backupFolderName + "/";
+            Path path2 = Paths.get(targetDirPath.toString(), backupFolderName);
+            targetDirPath = path2;
+            return synchronize(sourceDirPath);
         }
 
         private int synchronize(Path currentFolder) {
@@ -175,11 +246,6 @@ public class App {
                 e.printStackTrace();
                 return -1;
             }
-        }
-
-        @Override
-        public Integer call() throws Exception {
-            return synchronize(sourceDirPath);
         }
     }
 
