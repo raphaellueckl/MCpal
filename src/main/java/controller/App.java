@@ -125,7 +125,7 @@ public class App {
 
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleWithFixedDelay(dailyTask, 1, 1, TimeUnit.MINUTES);
+        service.scheduleWithFixedDelay(dailyTask, 30, 30, TimeUnit.SECONDS);
     }
 
     public Process startMinecraftServer() {
@@ -150,31 +150,26 @@ public class App {
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
             w.write("say Serverbackup begins in 3...");
             w.flush();
-            w.close();
-            try {Thread.sleep(1000);}catch (Exception e) {}
-            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            Thread.sleep(1000);
             w.write("say 2...");
             w.flush();
-            w.close();
-            try {Thread.sleep(1000);}catch (Exception e) {}
-            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            Thread.sleep(1000);
             w.write("say 1...");
             w.flush();
-            w.close();
-            try {Thread.sleep(1000);}catch (Exception e) {}
-            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            Thread.sleep(1000);
             w.write("say GAME OVER!!!!!!!!!!!!!...");
             w.flush();
-            w.close();
-            w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
             w.write("stop");
             w.flush();
             w.close();
-        }catch (Exception e) {
-            System.out.println("****************************" + e.getStackTrace());
+            process.waitFor(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e1) {
+            process.destroy();
+            e1.printStackTrace();
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
-        try { process.waitFor(10, TimeUnit.SECONDS); } catch (InterruptedException e) { e.printStackTrace(); }
-        process.destroy();
+
     }
 
     public class DailyBackupTask implements Runnable {
@@ -191,6 +186,31 @@ public class App {
         public void run() {
             try {
                 stopMinecraftServer(serverProcess);
+                new Thread(() -> {
+                    try {
+                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+                        w.write("say Serverbackup begins in 3...");
+                        w.flush();
+                        Thread.sleep(1000);
+                        w.write("say 2...");
+                        w.flush();
+                        Thread.sleep(1000);
+                        w.write("say 1...");
+                        w.flush();
+                        Thread.sleep(1000);
+                        w.write("say GAME OVER!!!!!!!!!!!!!...");
+                        w.flush();
+                        w.write("stop");
+                        w.flush();
+                        w.close();
+                        process.waitFor(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException e1) {
+                        process.destroy();
+                        e1.printStackTrace();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }).start();
                 Thread.sleep(2000);
 
                 Backup backupHandler = new Backup(sourceDir, backupDir);
