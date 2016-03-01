@@ -147,19 +147,26 @@ public class App {
     public static void stopMinecraftServer(Process process) {
 //        PrintWriter w = new PrintWriter(process.getOutputStream());
         try {
-            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            w.write("say Serverbackup begins in 3...");
+            //BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
+            w.write("say Serverbackup begins in 3..." + System.getProperty("line.separator"));
+            w.println("say Serverbackup begins in 3...");
+
             w.flush();
             Thread.sleep(1000);
-            w.write("say 2...");
+            w.write("say 2..." + System.getProperty("line.separator"));
+            w.println("say 2...");
             w.flush();
             Thread.sleep(1000);
-            w.write("say 1...");
+            w.write("say 1..." + System.getProperty("line.separator"));
+            w.println("say 1...");
             w.flush();
             Thread.sleep(1000);
-            w.write("say GAME OVER!!!!!!!!!!!!!...");
+            w.write("say GAME OVER!!!!!!!!!!!!!..." + System.getProperty("line.separator"));
+            w.println("say GAME OVER!!!!!!!!!!!!!...");
             w.flush();
-            w.write("stop");
+            w.write("stop" + System.getProperty("line.separator"));
+            w.println("stop");
             w.flush();
             w.close();
             process.waitFor(10, TimeUnit.SECONDS);
@@ -188,7 +195,7 @@ public class App {
                 stopMinecraftServer(serverProcess);
                 new Thread(() -> {
                     try {
-                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
                         w.write("say Serverbackup begins in 3...");
                         w.flush();
                         Thread.sleep(1000);
@@ -203,9 +210,9 @@ public class App {
                         w.write("stop");
                         w.flush();
                         w.close();
-                        process.waitFor(10, TimeUnit.SECONDS);
+                        serverProcess.waitFor(10, TimeUnit.SECONDS);
                     } catch (InterruptedException e1) {
-                        process.destroy();
+                        serverProcess.destroy();
                         e1.printStackTrace();
                     } catch (IOException e1) {
                         e1.printStackTrace();
