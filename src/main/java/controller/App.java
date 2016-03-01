@@ -118,10 +118,7 @@ public class App {
     }
 
     private void start() throws IOException {
-//        Backup backupTask = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
-
         serverProcess = startMinecraftServer();
-
 
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -145,38 +142,50 @@ public class App {
     }
 
     public static void stopMinecraftServer(Process process) {
-//        PrintWriter w = new PrintWriter(process.getOutputStream());
+
+        PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
+        w.println("say Serverbackup begins in 3...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 9...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 8...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 7...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 6...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 5...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 4...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 3...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 2...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say 1...");
+        w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say GAME OVER!!!!!!!!!!!!!...");
+        w.flush();
+        w.println("stop");
+        w.flush();
+        //w.close();
         try {
-            //BufferedWriter w = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
-            w.write("say Serverbackup begins in 3..." + System.getProperty("line.separator"));
-            w.println("say Serverbackup begins in 3...");
-
-            w.flush();
-            Thread.sleep(1000);
-            w.write("say 2..." + System.getProperty("line.separator"));
-            w.println("say 2...");
-            w.flush();
-            Thread.sleep(1000);
-            w.write("say 1..." + System.getProperty("line.separator"));
-            w.println("say 1...");
-            w.flush();
-            Thread.sleep(1000);
-            w.write("say GAME OVER!!!!!!!!!!!!!..." + System.getProperty("line.separator"));
-            w.println("say GAME OVER!!!!!!!!!!!!!...");
-            w.flush();
-            w.write("stop" + System.getProperty("line.separator"));
-            w.println("stop");
-            w.flush();
-            w.close();
+            System.out.println("CurrentTime: " + System.currentTimeMillis());
             process.waitFor(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e1) {
-            process.destroy();
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            e1.printStackTrace();
+            System.out.println("After the wait: " + System.currentTimeMillis());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
     }
 
     public class DailyBackupTask implements Runnable {
