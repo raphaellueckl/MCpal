@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -123,6 +124,12 @@ public class App {
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleWithFixedDelay(dailyTask, 30, 30, TimeUnit.SECONDS);
+
+        final LocalDateTime now = LocalDateTime.now();
+        final int year = now.getDayOfYear();
+        final Month month = now.getMonth();
+        final int dayOfMonth = now.getDayOfMonth();
+        final int 
     }
 
     public Process startMinecraftServer() {
@@ -142,7 +149,17 @@ public class App {
     }
 
     public static void stopMinecraftServer(Process process) {
+        runBackupStartCountDown(process);
+        try {
+            System.out.println("CurrentTime: " + System.currentTimeMillis());
+            process.waitFor(10, TimeUnit.SECONDS);
+            System.out.println("After the wait: " + System.currentTimeMillis());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
+    private static void runBackupStartCountDown(Process process) {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
         w.println("say Serverbackup begins in 3...");
         w.flush();
@@ -179,13 +196,6 @@ public class App {
         w.println("stop");
         w.flush();
         //w.close();
-        try {
-            System.out.println("CurrentTime: " + System.currentTimeMillis());
-            process.waitFor(10, TimeUnit.SECONDS);
-            System.out.println("After the wait: " + System.currentTimeMillis());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public class DailyBackupTask implements Runnable {
