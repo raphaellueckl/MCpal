@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -122,7 +123,16 @@ public class App {
 
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        int oneDayInSeconds = 86400;
+        int secondsUntil2Am = calculateTimeInSecondsTo2AM();
+        //TODO Change the time here.
         service.scheduleWithFixedDelay(dailyTask, 30, 30, TimeUnit.SECONDS);
+    }
+
+    private int calculateTimeInSecondsTo2AM() {
+        final LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime secondsTo2AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 2, 0);
+        return (int) ChronoUnit.SECONDS.between(secondsTo2AM, now);
     }
 
     public Process startMinecraftServer() {
@@ -142,9 +152,8 @@ public class App {
     }
 
     public static void stopMinecraftServer(Process process) {
-
         PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
-        w.println("say Serverbackup begins in 3...");
+        w.println("say Serverbackup begins in 10...");
         w.flush();
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         w.println("say 9...");
@@ -185,6 +194,8 @@ public class App {
             System.out.println("After the wait: " + System.currentTimeMillis());
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            process.destroy();
         }
     }
 
@@ -202,36 +213,12 @@ public class App {
         public void run() {
             try {
                 stopMinecraftServer(serverProcess);
-                new Thread(() -> {
-                    try {
-                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
-                        w.write("say Serverbackup begins in 3...");
-                        w.flush();
-                        Thread.sleep(1000);
-                        w.write("say 2...");
-                        w.flush();
-                        Thread.sleep(1000);
-                        w.write("say 1...");
-                        w.flush();
-                        Thread.sleep(1000);
-                        w.write("say GAME OVER!!!!!!!!!!!!!...");
-                        w.flush();
-                        w.write("stop");
-                        w.flush();
-                        w.close();
-                        serverProcess.waitFor(10, TimeUnit.SECONDS);
-                    } catch (InterruptedException e1) {
-                        serverProcess.destroy();
-                        e1.printStackTrace();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-                }).start();
-                Thread.sleep(2000);
 
+                Thread.sleep(2000);
                 Backup backupHandler = new Backup(sourceDir, backupDir);
                 FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
                 new Thread(futureTask).start();
+                //TODO result can be used for error handling.
                 Integer result = futureTask.get();
 
                 Thread.sleep(2000);
