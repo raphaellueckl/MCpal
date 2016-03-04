@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 public class App {
 
+    private static final boolean TEST_MODE = true;
+
     public static final String CONFIG_FILENAME = "MCpal.cfg";
 
     public final Path SOURCE_DIR_PATH;
@@ -44,8 +46,8 @@ public class App {
     public static void main(String... args) throws IOException {
 //        final String fromPath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 //        final Path fromPathPath = Paths.get(fromPath).getParent();
-//        final String fromPath = "C:/Users/ralu/Desktop/mc/";
-        final String fromPath;
+        String fromPath = "C:/Users/rapha/Desktop/mc/";
+//        final String fromPath;
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -55,19 +57,20 @@ public class App {
             maxHeapSize = args[2];
             jarName = args[3];
             writeConfigFile(fromPath, args);
-            checkEula(fromPath);
-//        } else if (Files.exists(Paths.get(fromPath + CONFIG_FILE))) {
-//            final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILE));
-//            if (arguments.size() != 4) throw new RuntimeException("Invalid input parameters");
-//            Files.delete(Paths.get(fromPath + CONFIG_FILE));
-//            toPath = arguments.get(0);
-//            maxHeapSize = arguments.get(1);
-//            jarName = arguments.get(2);
+        } else if (Files.exists(Paths.get(fromPath + CONFIG_FILENAME))) {
+            final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILENAME));
+            if (arguments.size() != 4) throw new RuntimeException("Invalid input parameters");
+            Files.delete(Paths.get(fromPath + CONFIG_FILENAME));
+            toPath = arguments.get(0);
+            maxHeapSize = arguments.get(1);
+            jarName = arguments.get(2);
         } else {
             throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
                     "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
                     "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
         }
+
+        checkEula(fromPath);
 
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName);
         MCpal.start();
@@ -126,7 +129,11 @@ public class App {
         int oneDayInSeconds = 86400;
         int secondsUntil2Am = calculateTimeInSecondsTo2AM();
         //TODO Change the time here.
-        service.scheduleWithFixedDelay(dailyTask, 30, 30, TimeUnit.SECONDS);
+        if (TEST_MODE) {
+            service.scheduleWithFixedDelay(dailyTask, 30, 30, TimeUnit.SECONDS);
+        } else {
+            service.scheduleWithFixedDelay(dailyTask, secondsUntil2Am, oneDayInSeconds, TimeUnit.SECONDS);
+        }
     }
 
     private int calculateTimeInSecondsTo2AM() {
