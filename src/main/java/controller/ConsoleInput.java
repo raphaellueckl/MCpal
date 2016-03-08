@@ -15,6 +15,7 @@ public class ConsoleInput implements Runnable {
 		PrintWriter w = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
 		while (true) {
 			String msg = scan.nextLine();
+			handleCommandMessage();
 			if (!sProcess.equals(App.serverProcess)) {
 				sProcess = App.serverProcess;
 				w = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
@@ -22,5 +23,9 @@ public class ConsoleInput implements Runnable {
 			w.println(msg);
 			w.flush();
 		}
+	}
+
+	private void handleCommandMessage(String msg) {
+		if (msg.startsWith())
 	}
 }
