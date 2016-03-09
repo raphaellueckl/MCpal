@@ -38,7 +38,10 @@ public class App {
     	Path fromPath;
         if (TEST_MODE) fromPath = Paths.get("C:/Users/Raphael/Desktop/mc");
         else fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        
+
+        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
+                "Make sure that it is within the same folder as this program.");
+
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -74,7 +77,7 @@ public class App {
         try {
             Path eulaPath = fromPath.resolve("eula.txt");
             File eulaFile = eulaPath.toFile();
-            // TODO Irgendwie müsste die Eula generiert werden, wenn sie nicht vorhanden ist.
+            // TODO Irgendwie mï¿½sste die Eula generiert werden, wenn sie nicht vorhanden ist.
             if (Files.exists(eulaPath)) {
                 List<String> readAllLines = Files.readAllLines(eulaPath);
                 final StringBuilder sb = new StringBuilder();
@@ -148,9 +151,9 @@ public class App {
         return process;
     }
 
-    public static void stopMinecraftServer(Process process) {
+    public static void stopMinecraftServer(Process process, String reason) {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
-        w.println("say Serverbackup begins in 10...");
+        w.println("say " + reason + " begins in 10...");
         w.flush();
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         w.println("say 9...");

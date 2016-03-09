@@ -16,7 +16,7 @@ public class DailyBackupTask implements Runnable {
     @Override
     public void run() {
         try {
-            App.stopMinecraftServer(App.serverProcess);
+            App.stopMinecraftServer(App.serverProcess, "[Server backup]");
 
             Thread.sleep(2000);
             Backup backupHandler = new Backup(sourceDir, backupDir);

@@ -15,7 +15,7 @@ public class ConsoleInput implements Runnable {
 		PrintWriter w = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
 		while (true) {
 			String msg = scan.nextLine();
-			handleCommandMessage();
+			handleCommandMessage(msg);
 			if (!sProcess.equals(App.serverProcess)) {
 				sProcess = App.serverProcess;
 				w = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
@@ -26,6 +26,10 @@ public class ConsoleInput implements Runnable {
 	}
 
 	private void handleCommandMessage(String msg) {
-		if (msg.startsWith())
+		if (msg.startsWith("stop ")) {
+			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
+		} else if (msg.equals("start")) {
+			App.startMinecraftServer();
+		}
 	}
 }
