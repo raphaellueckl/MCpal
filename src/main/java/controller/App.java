@@ -16,6 +16,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The future ideas to this app would be:
+ * - Implement automatic server backups ...done!
+ * - Give an optional time-parameter when the backup starts.
+ * - Space management: Set a size of the backup folder and automatically delete the oldest backups.
+ * - Make a "once per month" and "once per year" backup.
+ *
+ */
 public class App {
 
 	// Remember to adapt the fromPath to point to your server-directory if set to true. 
@@ -40,7 +48,7 @@ public class App {
         else fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
 
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
-                "Make sure that it is within the same folder as this program.");
+                "Make sure that put this program into your Minecraft server directory.");
 
         final String toPath;
         final String maxHeapSize;
@@ -63,8 +71,6 @@ public class App {
                     "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
         }
 
-        //TODO If !jar.exists throw exception
-        
         checkEula(fromPath);
 
         new Thread(new ConsoleInput()).start();
@@ -90,7 +96,8 @@ public class App {
                     fw.flush();
                     fw.close();
                 }
-            }
+            } else throw new IllegalStateException("Please restart this program. The EULA wasn't " +
+                    "available at startup, but now it is fine. :)");
         } catch (IOException e) {
             e.printStackTrace();
         }
