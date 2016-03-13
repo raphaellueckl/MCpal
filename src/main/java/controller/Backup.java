@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
@@ -21,14 +20,19 @@ public class Backup implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        String backupFolderName = String.valueOf(LocalDateTime.now().getYear()) + "_" +
-                (String.valueOf(LocalDateTime.now().getMonth().getValue()).length() == 1 ? 
-                		"0" + String.valueOf(LocalDateTime.now().getMonth().getValue()) : 
-                			String.valueOf(LocalDateTime.now().getMonth().getValue())) + "_" +
-                String.valueOf(LocalDateTime.now().getDayOfMonth()) + "_" +
-                String.valueOf(LocalDateTime.now().getNano()).replaceAll("0", "");
+        String backupFolderName = createNewBackupFolder();
         targetDirPath = targetDirPath.resolve(backupFolderName);
         return sync(sourceDirPath);
+    }
+
+    private String createNewBackupFolder() throws IOException {
+        long backupNumber = Files.list(targetDirPath).count();
+        return String.valueOf(LocalDateTime.now().getYear()) +
+                (String.valueOf(LocalDateTime.now().getMonth().getValue()).length() == 1 ?
+                		"0" + String.valueOf(LocalDateTime.now().getMonth().getValue()) :
+                			String.valueOf(LocalDateTime.now().getMonth().getValue())) +
+                String.valueOf(LocalDateTime.now().getDayOfMonth()) + "_" +
+                String.valueOf(++backupNumber);
     }
 
     private int sync(Path currentFolder) {

@@ -83,7 +83,7 @@ public class App {
         try {
             Path eulaPath = fromPath.resolve("eula.txt");
             File eulaFile = eulaPath.toFile();
-            // TODO Irgendwie m�sste die Eula generiert werden, wenn sie nicht vorhanden ist.
+            // TODO Irgendwie müsste die Eula generiert werden, wenn sie nicht vorhanden ist.
             if (Files.exists(eulaPath)) {
                 List<String> readAllLines = Files.readAllLines(eulaPath);
                 final StringBuilder sb = new StringBuilder();

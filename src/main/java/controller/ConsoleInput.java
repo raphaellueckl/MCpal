@@ -24,6 +24,8 @@ public class ConsoleInput implements Runnable {
 	private void handleCommandMessage(String msg) {
 		if (msg.startsWith("stop ")) {
 			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
+		} else if (msg.equals("stop")) {
+			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
 		} else if (msg.equals("start")) {
 			App.startMinecraftServer();
 		} else {

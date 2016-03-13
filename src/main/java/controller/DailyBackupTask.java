@@ -1,5 +1,6 @@
 package controller;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.FutureTask;
 
@@ -19,6 +20,7 @@ public class DailyBackupTask implements Runnable {
             App.stopMinecraftServer(App.serverProcess, "[Server backup]");
 
             Thread.sleep(2000);
+            Files.createDirectories(backupDir);
             Backup backupHandler = new Backup(sourceDir, backupDir);
             FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
             new Thread(futureTask).start();
