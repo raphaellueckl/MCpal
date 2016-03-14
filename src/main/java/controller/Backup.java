@@ -20,19 +20,21 @@ public class Backup implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        String backupFolderName = createNewBackupFolder();
+        String backupFolderName = evaluateNewBackupFolderName(this);
         targetDirPath = targetDirPath.resolve(backupFolderName);
         return sync(sourceDirPath);
     }
 
-    private String createNewBackupFolder() throws IOException {
-        long backupNumber = Files.list(targetDirPath).count();
-        return String.valueOf(LocalDateTime.now().getYear()) +
-                (String.valueOf(LocalDateTime.now().getMonth().getValue()).length() == 1 ?
-                		"0" + String.valueOf(LocalDateTime.now().getMonth().getValue()) :
-                			String.valueOf(LocalDateTime.now().getMonth().getValue())) +
-                String.valueOf(LocalDateTime.now().getDayOfMonth()) + "_" +
-                String.valueOf(++backupNumber);
+    private static String evaluateNewBackupFolderName(Backup backup) throws IOException {
+        final LocalDateTime now = LocalDateTime.now();
+        return String.valueOf(now.getYear()) +
+                (twoDigitFormat(String.valueOf(now.getMonth().getValue())) +
+                twoDigitFormat(String.valueOf(now.getDayOfMonth())) + "_" +
+                twoDigitFormat(String.valueOf(now.getHour())) + twoDigitFormat(String.valueOf(now.getMinute())));
+    }
+
+    private static String twoDigitFormat(String term) {
+        return term.length() < 2 ? "0" + term : term;
     }
 
     private int sync(Path currentFolder) {

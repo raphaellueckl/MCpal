@@ -26,9 +26,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class App {
 
-	// Remember to adapt the fromPath to point to your server-directory if set to true. 
-    private static final boolean TEST_MODE = false;
-
     public static final String CONFIG_FILENAME = "MCpal.cfg";
 
     public static Path SOURCE_DIR_PATH;
@@ -41,14 +38,14 @@ public class App {
     private static Thread consoleThread;
     public static volatile Process serverProcess;
 
-    public static void main(String... args) throws IOException, URISyntaxException {
-    	
-    	Path fromPath;
-        if (TEST_MODE) fromPath = Paths.get("C:/Users/Raphael/Desktop/mc");
-        else fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+    public static void main(String... args) throws IOException {
 
-        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
-                "Make sure that put this program into your Minecraft server directory.");
+        Path fromPath = null;
+        try {
+            fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
 
         final String toPath;
         final String maxHeapSize;
@@ -58,7 +55,7 @@ public class App {
             maxHeapSize = args[1];
             jarName = args[2];
             writeConfigFile(fromPath, args);
-        } else if (Files.exists(fromPath.resolve(CONFIG_FILENAME)) && !TEST_MODE) {
+        } else if (Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILENAME));
             if (arguments.size() != 3) Files.delete(fromPath.resolve(CONFIG_FILENAME));
             Files.delete(Paths.get(fromPath + CONFIG_FILENAME));
@@ -70,6 +67,10 @@ public class App {
                     "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
                     "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
         }
+
+
+        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
+                "Make sure that put this program into your Minecraft server directory.");
 
         checkEula(fromPath);
 
