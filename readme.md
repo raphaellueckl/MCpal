@@ -2,7 +2,7 @@
 
 ## What does it do?
 - Automatic backups once a day
-- 
+
 ## What are the benefits?
 - Small application (11 KB)
 - Runs smoothly on weak servers
