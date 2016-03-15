@@ -12,9 +12,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class App {
 
@@ -130,11 +128,11 @@ public class App {
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
-        int secondsUntil4Am = calculateTimeInSecondsTo2AM();
-        service.scheduleWithFixedDelay(dailyTask, secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
+        int secondsUntil4Am = calculateTimeInSecondsTo4AM();
+        service.scheduleWithFixedDelay(() -> backupServer(), secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
     }
 
-    private int calculateTimeInSecondsTo2AM() {
+    private int calculateTimeInSecondsTo4AM() {
         final LocalDateTime now = LocalDateTime.now();
         LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 3, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
@@ -201,6 +199,25 @@ public class App {
             e.printStackTrace();
         } finally {
             process.destroy();
+        }
+    }
+
+    public static synchronized void backupServer() {
+        try {
+            App.stopMinecraftServer(App.serverProcess, "[Server backup]");
+
+            Thread.sleep(2000);
+            Files.createDirectories(SOURCE_DIR_PATH);
+            Backup backupHandler = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
+            FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
+            new Thread(futureTask).start();
+            //TODO result can be used for error handling.
+            Integer result = futureTask.get();
+
+            Thread.sleep(2000);
+            serverProcess = startMinecraftServer();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

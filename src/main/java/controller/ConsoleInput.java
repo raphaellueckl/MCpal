@@ -28,14 +28,24 @@ public class ConsoleInput implements Runnable {
 			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
 		} else if (msg.equals("start")) {
 			App.startMinecraftServer();
-		} else {
+		} else if (msg.equals("backup")) {
 
-			if (!sProcess.equals(App.serverProcess)) {
-				sProcess = App.serverProcess;
-				consolePrinter = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
-			}
-			consolePrinter.println(msg);
-			consolePrinter.flush();
+		} else if (msg.equals("help")) {
+			printToConsole("Here is a list of MCpal's commands you can use here on the console:\n" +
+					"stop       Shutdown the server\n" +
+					"start      Start the server\n" +
+					"backup     Shutdown, backup, restart the server");
+		} else {
+			printToConsole(msg);
 		}
+	}
+
+	private void printToConsole(String msg) {
+		if (!sProcess.equals(App.serverProcess)) {
+			sProcess = App.serverProcess;
+			consolePrinter = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
+		}
+		consolePrinter.println(msg);
+		consolePrinter.flush();
 	}
 }
