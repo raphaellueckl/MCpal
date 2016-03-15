@@ -125,7 +125,6 @@ public class App {
     private void start() throws IOException {
         serverProcess = startMinecraftServer();
 
-        DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
         int secondsUntil4Am = calculateTimeInSecondsTo4AM();

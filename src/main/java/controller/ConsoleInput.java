@@ -29,7 +29,7 @@ public class ConsoleInput implements Runnable {
 		} else if (msg.equals("start")) {
 			App.startMinecraftServer();
 		} else if (msg.equals("backup")) {
-
+			App.backupServer();
 		} else if (msg.equals("help")) {
 			printToConsole("Here is a list of MCpal's commands you can use here on the console:\n" +
 					"stop       Shutdown the server\n" +
