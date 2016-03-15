@@ -16,17 +16,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * The future ideas to this app would be:
- * - Implement automatic server backups ...done!
- * - Give an optional time-parameter when the backup starts.
- * - Space management: Set a size of the backup folder and automatically delete the oldest backups.
- * - Make a "once per month" and "once per year" backup.
- *
- */
 public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
+    public static final String MCPAL_TAG = "#MCpal: ";
 
     public static Path SOURCE_DIR_PATH;
     public static Path TARGET_DIR_PATH;
@@ -38,14 +31,9 @@ public class App {
     private static Thread consoleThread;
     public static volatile Process serverProcess;
 
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws IOException, URISyntaxException {
 
-        Path fromPath = null;
-        try {
-            fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+        Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
 
         final String toPath;
         final String maxHeapSize;
@@ -57,15 +45,20 @@ public class App {
             writeConfigFile(fromPath, args);
         } else if (Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILENAME));
-            if (arguments.size() != 3) Files.delete(fromPath.resolve(CONFIG_FILENAME));
+            if (arguments.size() != 3) {
+                Files.delete(fromPath.resolve(CONFIG_FILENAME));
+                throwInvalidStartParametersException();
+            }
             Files.delete(Paths.get(fromPath + CONFIG_FILENAME));
             toPath = arguments.get(0);
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
         } else {
-            throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
-                    "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
-                    "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
+            throwInvalidStartParametersException();
+            //TODO This is a workaround to keep the variables final. Doesn't work without since exception was outsourced.
+            toPath = null;
+            maxHeapSize = null;
+            jarName = null;
         }
 
 
@@ -78,6 +71,12 @@ public class App {
         
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName);
         MCpal.start();
+    }
+
+    private static void throwInvalidStartParametersException() {
+        throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
+                "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
+                "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
     }
 
     private static void checkEula(Path fromPath) {
@@ -97,7 +96,7 @@ public class App {
                     fw.flush();
                     fw.close();
                 }
-            } else throw new IllegalStateException("Please restart this program. The EULA wasn't " +
+            } else throw new IllegalStateException(MCPAL_TAG + "Please restart this program. The EULA wasn't " +
                     "available at startup, but now it is fine. :)");
         } catch (IOException e) {
             e.printStackTrace();
@@ -131,16 +130,16 @@ public class App {
         DailyBackupTask dailyTask = new DailyBackupTask(SOURCE_DIR_PATH, TARGET_DIR_PATH);
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
-        int secondsUntil2Am = calculateTimeInSecondsTo2AM();
-        service.scheduleWithFixedDelay(dailyTask, secondsUntil2Am, oneDayInSeconds, TimeUnit.SECONDS);
+        int secondsUntil4Am = calculateTimeInSecondsTo2AM();
+        service.scheduleWithFixedDelay(dailyTask, secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
     }
 
     private int calculateTimeInSecondsTo2AM() {
         final LocalDateTime now = LocalDateTime.now();
-        LocalDateTime secondsTo2AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 3, 0);
-        if (secondsTo2AM.isBefore(now)) secondsTo2AM = secondsTo2AM.plusDays(1); 
-        System.out.println("Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo2AM) + ":" + ChronoUnit.MINUTES.between(now, secondsTo2AM) % 60);
-        return (int) ChronoUnit.SECONDS.between(now, secondsTo2AM);
+        LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 3, 0);
+        if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
+        System.out.println(MCPAL_TAG + "Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo4AM) + ":" + ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60);
+        return (int) ChronoUnit.SECONDS.between(now, secondsTo4AM);
     }
 
     public static Process startMinecraftServer() {
@@ -197,9 +196,7 @@ public class App {
         w.flush();
         //w.close();
         try {
-            System.out.println("CurrentTime: " + System.currentTimeMillis());
             process.waitFor(10, TimeUnit.SECONDS);
-            System.out.println("After the wait: " + System.currentTimeMillis());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
