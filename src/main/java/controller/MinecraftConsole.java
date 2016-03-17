@@ -17,7 +17,9 @@ public class MinecraftConsole implements Runnable {
     public void run() {
         String line;
         try {
-            while ((line = consoleInputReader.readLine()) != null) { System.out.println(line); }
+            while ((line = consoleInputReader.readLine()) != null) {
+                System.out.println(line);
+            }
         } catch (IOException ioe) { ioe.printStackTrace(); }
     }
 }
