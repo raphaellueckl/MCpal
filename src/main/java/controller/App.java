@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -23,6 +24,7 @@ public class App {
     public static Path TARGET_DIR_PATH;
     public static String MAX_HEAP_SIZE;
     public static String JAR_NAME;
+    public static Path PATH_TO_MAPGENERATOR;
 
     public final String START_COMMAND;
 
@@ -36,12 +38,9 @@ public class App {
         final String toPath;
         final String maxHeapSize;
         final String jarName;
-        if (args.length == 3) {
-            toPath = args[0];
-            maxHeapSize = args[1];
-            jarName = args[2];
-            writeConfigFile(fromPath, args);
-        } else if (Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
+        final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
+
+        if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILENAME));
             if (arguments.size() != 3) {
                 Files.delete(fromPath.resolve(CONFIG_FILENAME));
@@ -51,6 +50,14 @@ public class App {
             toPath = arguments.get(0);
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
+        } else if (args.length != 0) {
+            toPath = args[0];
+            maxHeapSize = args[1];
+            jarName = args[2];
+            for (int i=3; i<args.length; ++i) {
+                additionalPluginsToRunAfterBackup.add(args[i]);
+            }
+            writeConfigFile(fromPath, args);
         } else {
             throwInvalidStartParametersException();
             //TODO This is a workaround to keep the variables final. Doesn't work without since exception was outsourced.
@@ -67,7 +74,7 @@ public class App {
 
         new Thread(new ConsoleInput()).start();
         
-        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName);
+        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, mapGenerator);
         MCpal.start();
     }
 
@@ -112,11 +119,12 @@ public class App {
         fw.close();
     }
 
-    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName) {
+    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, String worldName, String mapGenerator) {
         MAX_HEAP_SIZE = maxHeapSize;
         JAR_NAME = jarName;
         SOURCE_DIR_PATH = fromPath;
         TARGET_DIR_PATH = Paths.get(targetDir);
+        PATH_TO_MAPGENERATOR = Paths.get(mapGenerator);
 
         START_COMMAND = "java -jar -Xms" + MAX_HEAP_SIZE + "m" +
                 " -Xmx" + MAX_HEAP_SIZE + "m " + JAR_NAME + " nogui";
@@ -207,6 +215,12 @@ public class App {
             App.stopMinecraftServer(App.serverProcess, "[Server backup]");
 
             Thread.sleep(2000);
+
+            if (Files.exist(PATH_TO_MAPGENERATOR)) {
+                ProcessBuilder mapGeneratorProcessBuilder.directory(PATH_TO_MAPGENERATOR.getParent());
+                Process mapGeneratorProcess = mapGeneratorProcessBuilder.start();
+            }
+
             Files.createDirectories(SOURCE_DIR_PATH);
             Backup backupHandler = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
             FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
