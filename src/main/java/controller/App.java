@@ -19,12 +19,12 @@ public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
     public static final String MCPAL_TAG = "#MCpal: ";
-
     public static Path SOURCE_DIR_PATH;
+
     public static Path TARGET_DIR_PATH;
     public static String MAX_HEAP_SIZE;
     public static String JAR_NAME;
-    public static Path PATH_TO_MAPGENERATOR;
+    private static List<String> ADDITIONAL_COMMANDS_AFTER_BACKUP;
 
     public final String START_COMMAND;
 
@@ -51,9 +51,9 @@ public class App {
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
         } else if (args.length != 0) {
-            toPath = args[0];
-            maxHeapSize = args[1];
-            jarName = args[2];
+                toPath = args[0];
+                maxHeapSize = args[1];
+                jarName = args[2];
             for (int i=3; i<args.length; ++i) {
                 additionalPluginsToRunAfterBackup.add(args[i]);
             }
@@ -74,7 +74,7 @@ public class App {
 
         new Thread(new ConsoleInput()).start();
         
-        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, mapGenerator);
+        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }
 
@@ -119,12 +119,12 @@ public class App {
         fw.close();
     }
 
-    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, String worldName, String mapGenerator) {
+    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, List<String> additionalThingsToRun) {
         MAX_HEAP_SIZE = maxHeapSize;
         JAR_NAME = jarName;
         SOURCE_DIR_PATH = fromPath;
         TARGET_DIR_PATH = Paths.get(targetDir);
-        PATH_TO_MAPGENERATOR = Paths.get(mapGenerator);
+        ADDITIONAL_COMMANDS_AFTER_BACKUP = additionalThingsToRun;
 
         START_COMMAND = "java -jar -Xms" + MAX_HEAP_SIZE + "m" +
                 " -Xmx" + MAX_HEAP_SIZE + "m " + JAR_NAME + " nogui";
@@ -216,17 +216,17 @@ public class App {
 
             Thread.sleep(2000);
 
-            if (Files.exist(PATH_TO_MAPGENERATOR)) {
-                ProcessBuilder mapGeneratorProcessBuilder.directory(PATH_TO_MAPGENERATOR.getParent());
-                Process mapGeneratorProcess = mapGeneratorProcessBuilder.start();
-            }
-
             Files.createDirectories(SOURCE_DIR_PATH);
             Backup backupHandler = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
-            FutureTask<Integer> futureTask = new FutureTask<>(backupHandler);
+            FutureTask<String> futureTask = new FutureTask<>(backupHandler);
             new Thread(futureTask).start();
-            //TODO result can be used for error handling.
-            Integer result = futureTask.get();
+            String backupStorePath = futureTask.get();
+
+            for (String command :ADDITIONAL_COMMANDS_AFTER_BACKUP) {
+                if (command.contains("%")) {
+                    command.replace("%", backupStorePath);
+                }
+            }
 
             Thread.sleep(2000);
             serverProcess = startMinecraftServer();

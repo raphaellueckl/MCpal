@@ -1,14 +1,11 @@
 package controller;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
 
-public class Backup implements Callable<Integer> {
+public class Backup implements Callable<String> {
 
     private final Path sourceDirPath;
     private Path targetDirPath;
@@ -19,13 +16,14 @@ public class Backup implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws Exception {
-        String backupFolderName = evaluateNewBackupFolderName(this);
+    public String call() throws Exception {
+        String backupFolderName = evaluateNewBackupFolderName();
         targetDirPath = targetDirPath.resolve(backupFolderName);
-        return sync(sourceDirPath);
+        sync(sourceDirPath);
+        return backupFolderName;
     }
 
-    private static String evaluateNewBackupFolderName(Backup backup) throws IOException {
+    private static String evaluateNewBackupFolderName() throws IOException {
         final LocalDateTime now = LocalDateTime.now();
         return String.valueOf(now.getYear()) +
                 (twoDigitFormat(String.valueOf(now.getMonth().getValue())) +
