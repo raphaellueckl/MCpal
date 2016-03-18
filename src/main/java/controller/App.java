@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +39,7 @@ public class App {
         final String toPath;
         final String maxHeapSize;
         final String jarName;
+        final String worldName;
         final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
 
         if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
@@ -70,12 +72,25 @@ public class App {
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
                 "Make sure that put this program into your Minecraft server directory.");
 
+        worldName = searchWorldName(fromPath);
+
         checkEula(fromPath);
 
         new Thread(new ConsoleInput()).start();
         
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, additionalPluginsToRunAfterBackup);
         MCpal.start();
+    }
+
+    private static String searchWorldName(String fromPath) {
+        try {
+            DirectoryStream dirStream = Files.newDirectoryStream(Paths.get(fromPath));
+            for (String a : dirStream) {
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void throwInvalidStartParametersException() {
@@ -221,11 +236,7 @@ public class App {
             new Thread(futureTask).start();
             String backupStorePath = futureTask.get();
 
-            for (String command :ADDITIONAL_COMMANDS_AFTER_BACKUP) {
-                if (command.contains("%")) {
-                    command.replace("%", backupStorePath);
-                }
-            }
+            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("%", backupStorePath));
 
             Thread.sleep(2000);
             serverProcess = startMinecraftServer();
