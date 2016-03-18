@@ -25,10 +25,11 @@ public class App {
     public static Path TARGET_DIR_PATH;
     public static String MAX_HEAP_SIZE;
     public static String JAR_NAME;
+    public static Path WORLD_NAME;
+
     private static List<String> ADDITIONAL_COMMANDS_AFTER_BACKUP;
 
     public final String START_COMMAND;
-
     private static Thread consoleThread;
     public static volatile Process serverProcess;
 
@@ -39,7 +40,7 @@ public class App {
         final String toPath;
         final String maxHeapSize;
         final String jarName;
-        final String worldName;
+        final Path worldName;
         final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
 
         if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
@@ -78,19 +79,28 @@ public class App {
 
         new Thread(new ConsoleInput()).start();
         
-        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, additionalPluginsToRunAfterBackup);
+        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }
 
-    private static String searchWorldName(String fromPath) {
+    private static Path searchWorldName(Path fromPath) {
         try {
-            DirectoryStream dirStream = Files.newDirectoryStream(Paths.get(fromPath));
-            for (String a : dirStream) {
-
+            DirectoryStream<Path> dirStream = Files.newDirectoryStream(fromPath);
+            for (Path currentElement : dirStream) {
+                if (Files.isDirectory(currentElement) && couldThisDirectoryPossibleBeTheWorldFolder(currentElement)) {
+                    return currentElement.getFileName();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    private static boolean couldThisDirectoryPossibleBeTheWorldFolder(Path currentElement) {
+        Path levelDotDatFile = currentElement.resolve("level.dat");
+        return Files.exists(levelDotDatFile);
+
     }
 
     private static void throwInvalidStartParametersException() {
@@ -134,11 +144,12 @@ public class App {
         fw.close();
     }
 
-    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, List<String> additionalThingsToRun) {
+    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, Path worldName, List<String> additionalThingsToRun) {
         MAX_HEAP_SIZE = maxHeapSize;
         JAR_NAME = jarName;
         SOURCE_DIR_PATH = fromPath;
         TARGET_DIR_PATH = Paths.get(targetDir);
+        WORLD_NAME = worldName;
         ADDITIONAL_COMMANDS_AFTER_BACKUP = additionalThingsToRun;
 
         START_COMMAND = "java -jar -Xms" + MAX_HEAP_SIZE + "m" +
@@ -236,7 +247,8 @@ public class App {
             new Thread(futureTask).start();
             String backupStorePath = futureTask.get();
 
-            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("%", backupStorePath));
+            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", worldName));
+            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{2}", backupStorePath));
 
             Thread.sleep(2000);
             serverProcess = startMinecraftServer();
