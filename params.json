@@ -1,0 +1,6 @@
+{
+  "name": "Mcpal",
+  "tagline": "Minecraft Server Watcher Manager",
+  "body": "# MCpal - A lightweight Minecraft Server manager :)\r\n\r\n## What does it do?\r\n- Automatic backups once a day (currently at 4am)\r\n\r\n## What are the benefits?\r\n- Small application (11 KB)\r\n- Runs smoothly on weak servers\r\n\r\n## The future ideas to this app would be:\r\n- [x] Implement automatic server backups.\r\n- [ ] Give an optional time-parameter when the backup starts.\r\n- [ ] Add the possibility to do multiple backups a day.\r\n- [ ] Space management: Set a size of the backup folder and automatically delete the oldest backups.\r\n- [ ] Make a \"once per month\" and \"once per year\" backup.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
