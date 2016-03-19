@@ -44,8 +44,8 @@ public class App {
         final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
 
         if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
-            final List<String> arguments = Files.readAllLines(Paths.get(fromPath + CONFIG_FILENAME));
-            if (arguments.size() != 3) {
+            final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
+            if (arguments.size() < 3) {
                 Files.delete(fromPath.resolve(CONFIG_FILENAME));
                 throwInvalidStartParametersException();
             }
@@ -54,9 +54,9 @@ public class App {
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
         } else if (args.length != 0) {
-                toPath = args[0];
-                maxHeapSize = args[1];
-                jarName = args[2];
+            toPath = args[0];
+            maxHeapSize = args[1];
+            jarName = args[2];
             for (int i=3; i<args.length; ++i) {
                 additionalPluginsToRunAfterBackup.add(args[i]);
             }
@@ -162,7 +162,7 @@ public class App {
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
         int secondsUntil4Am = calculateTimeInSecondsTo4AM();
-        service.scheduleWithFixedDelay(() -> backupServer(), secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
+        service.scheduleWithFixedDelay(App::backupServer, secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
     }
 
     private int calculateTimeInSecondsTo4AM() {
@@ -247,7 +247,7 @@ public class App {
             new Thread(futureTask).start();
             String backupStorePath = futureTask.get();
 
-            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", worldName));
+            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
             ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{2}", backupStorePath));
 
             Thread.sleep(2000);

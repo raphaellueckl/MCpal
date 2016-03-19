@@ -9,6 +9,7 @@
 
 ## The future ideas to this app would be:
 - [x] Implement automatic server backups.
+- [ ] Implement the option to run external programs with parameters after a backup.
 - [ ] Give an optional time-parameter when the backup starts.
 - [ ] Add the possibility to do multiple backups a day.
 - [ ] Space management: Set a size of the backup folder and automatically delete the oldest backups.
