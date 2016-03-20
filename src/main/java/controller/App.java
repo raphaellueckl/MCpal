@@ -13,9 +13,14 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * Additional ideas:
+ * - Count the players on the server. If 0, it's unecessary to wait 10 seconds before stopping it (for instance)
+ */
 public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
@@ -31,6 +36,7 @@ public class App {
 
     public final String START_COMMAND;
     private static Thread consoleThread;
+    private static Thread consoleWriterThread;
     public static volatile Process serverProcess;
 
     public static void main(String... args) throws IOException, URISyntaxException {
@@ -77,7 +83,8 @@ public class App {
 
         checkEula(fromPath);
 
-        new Thread(new ConsoleInput()).start();
+        consoleWriterThread = new Thread(ConsoleInput::new);
+        consoleWriterThread.start();
         
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
@@ -154,6 +161,18 @@ public class App {
 
         START_COMMAND = "java -jar -Xms" + MAX_HEAP_SIZE + "m" +
                 " -Xmx" + MAX_HEAP_SIZE + "m " + JAR_NAME + " nogui";
+
+        ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
+
+        System.out.println("***********************");
+        System.out.println("Path of the server:   " + SOURCE_DIR_PATH);
+        System.out.println("Path for the backups: " + TARGET_DIR_PATH);
+        System.out.println("Server-Jar name:      " + JAR_NAME);
+        System.out.println("World-Name:           " + WORLD_NAME);
+        System.out.println("                      " + WORLD_NAME);
+        System.out.print  ("Additional commands:  ");
+        ADDITIONAL_COMMANDS_AFTER_BACKUP.forEach(c -> System.out.println("                      " + c));
+        System.out.println("***********************");
     }
 
     private void start() throws IOException {
@@ -184,6 +203,10 @@ public class App {
             if (consoleThread != null) consoleThread.interrupt();
             consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
             consoleThread.start();
+
+            if (consoleWriterThread != null) consoleThread.interrupt();
+            consoleWriterThread = new Thread(ConsoleInput::new);
+            consoleWriterThread.start();
 
         } catch (IOException ioe) { ioe.printStackTrace(); }
         return process;
@@ -247,8 +270,18 @@ public class App {
             new Thread(futureTask).start();
             String backupStorePath = futureTask.get();
 
-            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
-            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{2}", backupStorePath));
+            List<String> commandListClone = new ArrayList<>(ADDITIONAL_COMMANDS_AFTER_BACKUP);
+            commandListClone.replaceAll(command -> command.replace("{2}", backupStorePath));
+            for (String command : commandListClone) {
+                final ProcessBuilder processBuilder = new ProcessBuilder(command);
+                new Thread(() -> {
+                    try {
+                        processBuilder.start();
+                    } catch (IOException e) {
+                        System.out.println(MCPAL_TAG + "The following command failed: " + command);
+                    }
+                }).start();
+            }
 
             Thread.sleep(2000);
             serverProcess = startMinecraftServer();
