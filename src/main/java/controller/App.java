@@ -1,5 +1,7 @@
 package controller;
 
+import jdk.nashorn.internal.runtime.ScriptRuntime;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -100,6 +102,8 @@ public class App {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        new Thread(new ConsoleSpammer(MCPAL_TAG + "The world didn't exist when MCpal was started. Please " +
+                "restart MCpal and it will handle that.")).start();
         return null;
     }
 
@@ -133,13 +137,8 @@ public class App {
                     fw.close();
                 }
             } else {
-//                throw new IllegalStateException(MCPAL_TAG + "Please restart MCpal like you did before. The EULA " +
-//                        "wasn't available at startup, but now it is all set up. :)");
-//                final File unbornEula = eulaPath.toFile();
-//                //unbornEula.createNewFile();
-//                FileWriter fw = new FileWriter(unbornEula);
-//                fw.write("fw.write(\"eula=true\")");
-//                fw.close();
+                new Thread(new ConsoleSpammer(MCPAL_TAG + "NO EULA FOUND!! JUST RESTART MCpal, THE EULA WILL BE" +
+                        "SET TO TRUE AUTOMATICALLY!")).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,7 +167,9 @@ public class App {
         START_COMMAND = "java -jar -Xms" + MAX_HEAP_SIZE + "m" +
                 " -Xmx" + MAX_HEAP_SIZE + "m " + JAR_NAME + " nogui";
 
-        ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
+        if (WORLD_NAME != null) {
+            ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
+        }
 
         System.out.println("***********************");
         System.out.println("Path of the server:   " + SOURCE_DIR_PATH);
