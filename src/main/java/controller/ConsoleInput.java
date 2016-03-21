@@ -18,7 +18,6 @@ public class ConsoleInput implements Runnable {
 			String msg = scan.nextLine();
 			handleCommandMessage(msg);
 		}
-
 	}
 
 	private void handleCommandMessage(String msg) {

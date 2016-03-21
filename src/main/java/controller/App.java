@@ -13,7 +13,6 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -42,7 +41,7 @@ public class App {
     public static void main(String... args) throws IOException, URISyntaxException {
 
         Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-
+        System.out.println(fromPath);
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -75,12 +74,12 @@ public class App {
             jarName = null;
         }
 
-
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
-                "Make sure that put this program into your Minecraft server directory.");
+                "Please put this program into your Minecraft server directory.");
 
         worldName = searchWorldName(fromPath);
 
+        //An diesem Punkt läufer der Prozess noch gar nicht, die Eula wirdn ie generiert...
         checkEula(fromPath);
 
         consoleWriterThread = new Thread(ConsoleInput::new);
@@ -94,7 +93,7 @@ public class App {
         try {
             DirectoryStream<Path> dirStream = Files.newDirectoryStream(fromPath);
             for (Path currentElement : dirStream) {
-                if (Files.isDirectory(currentElement) && couldThisDirectoryPossibleBeTheWorldFolder(currentElement)) {
+                if (Files.isDirectory(currentElement) && couldThisDirectoryPossiblyBeTheWorldFolder(currentElement)) {
                     return currentElement.getFileName();
                 }
             }
@@ -104,7 +103,7 @@ public class App {
         return null;
     }
 
-    private static boolean couldThisDirectoryPossibleBeTheWorldFolder(Path currentElement) {
+    private static boolean couldThisDirectoryPossiblyBeTheWorldFolder(Path currentElement) {
         Path levelDotDatFile = currentElement.resolve("level.dat");
         return Files.exists(levelDotDatFile);
 
@@ -133,8 +132,15 @@ public class App {
                     fw.flush();
                     fw.close();
                 }
-            } else throw new IllegalStateException(MCPAL_TAG + "Please restart this program. The EULA wasn't " +
-                    "available at startup, but now it is fine. :)");
+            } else {
+//                throw new IllegalStateException(MCPAL_TAG + "Please restart MCpal like you did before. The EULA " +
+//                        "wasn't available at startup, but now it is all set up. :)");
+//                final File unbornEula = eulaPath.toFile();
+//                //unbornEula.createNewFile();
+//                FileWriter fw = new FileWriter(unbornEula);
+//                fw.write("fw.write(\"eula=true\")");
+//                fw.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -169,7 +175,6 @@ public class App {
         System.out.println("Path for the backups: " + TARGET_DIR_PATH);
         System.out.println("Server-Jar name:      " + JAR_NAME);
         System.out.println("World-Name:           " + WORLD_NAME);
-        System.out.println("                      " + WORLD_NAME);
         System.out.print  ("Additional commands:  ");
         ADDITIONAL_COMMANDS_AFTER_BACKUP.forEach(c -> System.out.println("                      " + c));
         System.out.println("***********************");
@@ -188,7 +193,8 @@ public class App {
         final LocalDateTime now = LocalDateTime.now();
         LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 3, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
-        System.out.println(MCPAL_TAG + "Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo4AM) + ":" + ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60);
+        System.out.println(MCPAL_TAG + "Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo4AM) +
+                ":" + ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60);
         return (int) ChronoUnit.SECONDS.between(now, secondsTo4AM);
     }
 
@@ -214,38 +220,8 @@ public class App {
 
     public static void stopMinecraftServer(Process process, String reason) {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
-        w.println("say " + reason + " begins in 10...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 9...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 8...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 7...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 6...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 5...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 4...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 3...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 2...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say 1...");
-        w.flush();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        w.println("say GAME OVER!!!!!!!!!!!!!...");
-        w.flush();
+        printCountDown(w, reason);
+
         w.println("stop");
         w.flush();
         //w.close();
@@ -256,6 +232,19 @@ public class App {
         } finally {
             process.destroy();
         }
+    }
+
+    private static void printCountDown(PrintWriter w, String reason) {
+        w.println("say " + reason + " begins in 10...");
+        w.flush();
+        for (int i=9; i>0; --i) {
+            try {Thread.sleep(1000);} catch (InterruptedException e) {}
+            w.println("say " + i + "...");
+            w.flush();
+        }
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        w.println("say GAME OVER!!!!!!!!!!!!!");
+        w.flush();
     }
 
     public static synchronized void backupServer() {
