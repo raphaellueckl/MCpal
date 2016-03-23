@@ -108,7 +108,7 @@ public class App {
     }
 
     private static boolean couldThisDirectoryPossiblyBeTheWorldFolder(Path currentElement) {
-        Path levelDotDatFile = currentElement.resolve("level.dat");
+        Path levelDotDatFile = currentElement.resolve("DIM1");
         return Files.exists(levelDotDatFile);
 
     }
@@ -137,8 +137,8 @@ public class App {
                     fw.close();
                 }
             } else {
-                new Thread(new ConsoleSpammer(MCPAL_TAG + "NO EULA FOUND!! JUST RESTART MCpal, THE EULA WILL BE" +
-                        "SET TO TRUE AUTOMATICALLY!")).start();
+                new Thread(new ConsoleSpammer(MCPAL_TAG + "NO EULA FOUND!! Just restart MCpal, the eula will be " +
+                        "set to true automatically!")).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -178,7 +178,7 @@ public class App {
         System.out.println("World-Name:           " + WORLD_NAME);
         System.out.print  ("Additional commands:  ");
         ADDITIONAL_COMMANDS_AFTER_BACKUP.forEach(c -> System.out.println("                      " + c));
-        System.out.println("***********************");
+        System.out.println(ADDITIONAL_COMMANDS_AFTER_BACKUP.isEmpty() ? "\n***********************" : "***********************");
     }
 
     private void start() throws IOException {
