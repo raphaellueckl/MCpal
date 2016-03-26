@@ -26,16 +26,15 @@ public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
     public static final String MCPAL_TAG = "#MCpal: ";
-    public static Path SOURCE_DIR_PATH;
+    public final String START_COMMAND;
 
+    public static Path SOURCE_DIR_PATH;
     public static Path TARGET_DIR_PATH;
     public static String MAX_HEAP_SIZE;
     public static String JAR_NAME;
     public static Path WORLD_NAME;
 
     private static List<String> ADDITIONAL_COMMANDS_AFTER_BACKUP;
-
-    public final String START_COMMAND;
     private static Thread consoleThread;
     private static Thread consoleWriterThread;
     public static volatile Process serverProcess;
@@ -77,7 +76,7 @@ public class App {
         }
 
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
-                "Please put this program into your Minecraft server directory.");
+                "Please put MCpal into your Minecraft server directory.");
 
         worldName = searchWorldName(fromPath);
 
