@@ -20,7 +20,7 @@ import java.util.concurrent.*;
 
 /**
  * Additional ideas:
- * - Count the players on the server. If 0, it's unecessary to wait 10 seconds before stopping it (for instance)
+ * - Count the players on the server. If 0, it's unnecessary to wait 10 seconds before stopping it (for instance)
  */
 public class App {
 
@@ -175,7 +175,7 @@ public class App {
         System.out.println("Path for the backups: " + TARGET_DIR_PATH);
         System.out.println("Server-Jar name:      " + JAR_NAME);
         System.out.println("World-Name:           " + WORLD_NAME);
-        System.out.print  ("Additional commands:  ");
+        System.out.println("Additional commands:  ");
         ADDITIONAL_COMMANDS_AFTER_BACKUP.forEach(c -> System.out.println("                      " + c));
         System.out.println(ADDITIONAL_COMMANDS_AFTER_BACKUP.isEmpty() ? "\n***********************" : "***********************");
     }
@@ -264,10 +264,8 @@ public class App {
             for (String command : commandListClone) {
                 final ProcessBuilder processBuilder = new ProcessBuilder(command);
                 new Thread(() -> {
-                    try {
-                        processBuilder.start();
-                    } catch (IOException e) {
-                        System.out.println(MCPAL_TAG + "The following command failed: " + command);
+                    try { processBuilder.start(); } catch (IOException e) {
+                        System.out.println(MCPAL_TAG + "The following process failed: " + command);
                     }
                 }).start();
             }
