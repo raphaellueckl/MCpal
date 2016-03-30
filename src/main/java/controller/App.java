@@ -1,7 +1,5 @@
 package controller;
 
-import jdk.nashorn.internal.runtime.ScriptRuntime;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -70,7 +68,8 @@ public class App {
             writeConfigFile(fromPath, args);
         } else {
             throwInvalidStartParametersException();
-            //TODO This is a workaround to keep the variables final. Doesn't work without since exception was outsourced.
+            //TODO This is a workaround to keep the variables final. Doesn't work without since the throwing of the
+            // exception was outsourced.
             toPath = null;
             maxHeapSize = null;
             jarName = null;
@@ -81,7 +80,6 @@ public class App {
 
         worldName = searchWorldName(fromPath);
 
-        //An diesem Punkt läufer der Prozess noch gar nicht, die Eula wirdn ie generiert...
         checkEula(fromPath);
 
         consoleWriterThread = new Thread(ConsoleInput::new);
@@ -211,7 +209,7 @@ public class App {
             consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
             consoleThread.start();
 
-            if (consoleWriterThread != null) consoleThread.interrupt();
+            if (consoleWriterThread != null) consoleWriterThread.interrupt();
             consoleWriterThread = new Thread(ConsoleInput::new);
             consoleWriterThread.start();
 
@@ -268,6 +266,7 @@ public class App {
                 new Thread(() -> {
                     try { processBuilder.start(); } catch (IOException e) {
                         System.out.println(MCPAL_TAG + "The following process failed: " + command);
+                        e.printStackTrace();
                     }
                 }).start();
             }
