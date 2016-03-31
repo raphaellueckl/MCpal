@@ -19,6 +19,8 @@ import java.util.concurrent.*;
 /**
  * Additional ideas:
  * - Count the players on the server. If 0, it's unnecessary to wait 10 seconds before stopping it (for instance)
+ * - Custom parameters with default values
+ * - Fix the console input
  */
 public class App {
 
@@ -47,7 +49,15 @@ public class App {
         final Path worldName;
         final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
 
-        if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
+        if (args.length != 0) {
+            toPath = args[0];
+            maxHeapSize = args[1];
+            jarName = args[2];
+            for (int i = 3; i < args.length; ++i) {
+                additionalPluginsToRunAfterBackup.add(args[i]);
+            }
+            writeConfigFile(fromPath, args);
+        } else if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
             if (arguments.size() < 3) {
                 Files.delete(fromPath.resolve(CONFIG_FILENAME));
@@ -57,17 +67,9 @@ public class App {
             toPath = arguments.get(0);
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
-        } else if (args.length != 0) {
-            toPath = args[0];
-            maxHeapSize = args[1];
-            jarName = args[2];
-            for (int i=3; i<args.length; ++i) {
-                additionalPluginsToRunAfterBackup.add(args[i]);
-            }
-            writeConfigFile(fromPath, args);
         } else {
             throwInvalidStartParametersException();
-            //TODO This is a workaround to keep the variables final. Doesn't work without since the throwing of the
+            // TODO This is a workaround to keep the variables final. Doesn't work without since the throwing of the
             // exception was outsourced.
             toPath = null;
             maxHeapSize = null;
