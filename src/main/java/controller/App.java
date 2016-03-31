@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -262,7 +263,8 @@ public class App {
             List<String> commandListClone = new ArrayList<>(ADDITIONAL_COMMANDS_AFTER_BACKUP);
             commandListClone.replaceAll(command -> command.replace("{2}", backupStorePath));
             for (String command : commandListClone) {
-                final ProcessBuilder processBuilder = new ProcessBuilder(command);
+                final List<String> parametersOfCommand = Arrays.asList(command.split(" "));
+                final ProcessBuilder processBuilder = new ProcessBuilder(parametersOfCommand);
                 new Thread(() -> {
                     try { processBuilder.start(); } catch (IOException e) {
                         System.out.println(MCPAL_TAG + "The following process failed: " + command);
