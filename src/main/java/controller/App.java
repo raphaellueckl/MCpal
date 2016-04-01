@@ -27,6 +27,7 @@ public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
     public static final String MCPAL_TAG = "#MCpal: ";
+    private static volatile boolean isServerRunning = false;
     public final String START_COMMAND;
 
     public static Path SOURCE_DIR_PATH;
@@ -77,16 +78,13 @@ public class App {
             jarName = null;
         }
 
-        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file." +
+        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
                 "Please put MCpal into your Minecraft server directory.");
 
         worldName = searchWorldName(fromPath);
 
         checkEula(fromPath);
 
-        consoleWriterThread = new Thread(ConsoleInput::new);
-        consoleWriterThread.start();
-        
         App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }
@@ -178,11 +176,14 @@ public class App {
         System.out.println("World-Name:           " + WORLD_NAME);
         System.out.println("Additional commands:  ");
         ADDITIONAL_COMMANDS_AFTER_BACKUP.forEach(c -> System.out.println("                      " + c));
-        System.out.println(ADDITIONAL_COMMANDS_AFTER_BACKUP.isEmpty() ? "\n***********************" : "***********************");
+        System.out.println("***********************");
     }
 
     private void start() throws IOException {
         serverProcess = startMinecraftServer();
+
+        consoleWriterThread = new Thread(new ConsoleInput());
+        consoleWriterThread.start();
 
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
@@ -192,7 +193,7 @@ public class App {
 
     private int calculateTimeInSecondsTo4AM() {
         final LocalDateTime now = LocalDateTime.now();
-        LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 3, 0);
+        LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 4, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
         System.out.println(MCPAL_TAG + "Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo4AM) +
                 ":" + ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60);
@@ -200,38 +201,54 @@ public class App {
     }
 
     public static Process startMinecraftServer() {
-        Process process = null;
-        try {
-            final ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "-Xms" + MAX_HEAP_SIZE + "m",
-                    "-Xmx" + MAX_HEAP_SIZE + "m", JAR_NAME , "nogui");
-            processBuilder.directory(SOURCE_DIR_PATH.toFile());
-            process = processBuilder.start();
 
-            if (consoleThread != null) consoleThread.interrupt();
-            consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
-            consoleThread.start();
+        if (isServerRunning) {
+            System.out.println(MCPAL_TAG + "Server is already running, please stop it first using the \"stop\"-command");
+            return null;
+        } else {
 
-            if (consoleWriterThread != null) consoleWriterThread.interrupt();
-            consoleWriterThread = new Thread(ConsoleInput::new);
-            consoleWriterThread.start();
+            Process process = null;
+            try {
+                final ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "-Xms" + MAX_HEAP_SIZE + "m",
+                        "-Xmx" + MAX_HEAP_SIZE + "m", JAR_NAME, "nogui");
+                processBuilder.directory(SOURCE_DIR_PATH.toFile());
+                process = processBuilder.start();
 
-        } catch (IOException ioe) { ioe.printStackTrace(); }
-        return process;
+                if (consoleThread != null) consoleThread.interrupt();
+                consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
+                consoleThread.start();
+
+//                if (consoleWriterThread != null) consoleWriterThread.interrupt();
+//                consoleWriterThread = new Thread(new ConsoleInput());
+//                consoleWriterThread.start();
+
+                isServerRunning = true;
+
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            return process;
+        }
     }
 
-    public static void stopMinecraftServer(Process process, String reason) {
-        PrintWriter w = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
-        printCountDown(w, reason);
+    public static void stopMinecraftServer(Process process, String reason, boolean runWithCountdown) {
+        if (isServerRunning) {
+            PrintWriter consoleWriter = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
+            if (runWithCountdown) printCountDown(consoleWriter, reason);
 
-        w.println("stop");
-        w.flush();
-        //w.close();
-        try {
-            process.waitFor(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            process.destroy();
+            consoleWriter.println("stop");
+            consoleWriter.flush();
+            //w.close();
+            try {
+                process.waitFor(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                process.destroy();
+                isServerRunning = false;
+            }
+        } else {
+            System.out.println(MCPAL_TAG + "Nothing to stop. Server is not active at the moment.");
         }
     }
 
@@ -250,7 +267,7 @@ public class App {
 
     public static synchronized void backupServer() {
         try {
-            App.stopMinecraftServer(App.serverProcess, "[Server backup]");
+            App.stopMinecraftServer(App.serverProcess, "[Server backup]", true);
 
             Thread.sleep(2000);
 
@@ -266,7 +283,10 @@ public class App {
                 final List<String> parametersOfCommand = Arrays.asList(command.split(" "));
                 final ProcessBuilder processBuilder = new ProcessBuilder(parametersOfCommand);
                 new Thread(() -> {
-                    try { processBuilder.start(); } catch (IOException e) {
+                    try {
+                        processBuilder.start();
+                        System.out.println(MCPAL_TAG + "Process successful: " + parametersOfCommand.get(0));
+                    } catch (IOException e) {
                         System.out.println(MCPAL_TAG + "The following process failed: " + command);
                         e.printStackTrace();
                     }

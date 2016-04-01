@@ -14,17 +14,23 @@ public class ConsoleInput implements Runnable {
 		Scanner scan = new Scanner(System.in);
 		this.sProcess = App.serverProcess;
 		consolePrinter = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
-		while (true) {
-			String msg = scan.nextLine();
+		String msg;
+		while (!Thread.currentThread().isInterrupted()) {
+			msg = scan.nextLine();
+			System.out.println("Received command string");
 			handleCommandMessage(msg);
 		}
+		System.out.println("ConsoleWriter dies.");
 	}
 
 	private void handleCommandMessage(String msg) {
-		if (msg.startsWith("stop ")) {
-			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
-		} else if (msg.equals("stop")) {
-			App.stopMinecraftServer(App.serverProcess, "[Server stop]");
+		System.out.println("check");
+		if (msg.equals("stop")) {
+			App.stopMinecraftServer(App.serverProcess, "[Server stop]", true);
+		} else if (msg.equals("istop")) {
+			App.stopMinecraftServer(App.serverProcess, "[Server stop]", false);
+		} else if (msg.startsWith("stop")) {
+			App.stopMinecraftServer(App.serverProcess, "[Server stop]", true);
 		} else if (msg.equals("start")) {
 			App.startMinecraftServer();
 		} else if (msg.equals("backup")) {
@@ -53,8 +59,7 @@ public class ConsoleInput implements Runnable {
 
 	private void printToConsole(String msg) {
 		if (!sProcess.equals(App.serverProcess)) {
-			sProcess = App.serverProcess;
-			consolePrinter = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
+			consolePrinter = new PrintWriter(App.serverProcess.getOutputStream());
 		}
 		consolePrinter.println(msg);
 		consolePrinter.flush();
