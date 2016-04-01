@@ -259,14 +259,15 @@ public class App {
     private static void printCountDown(PrintWriter w, String reason) {
         w.println("say " + reason + " begins in 10...");
         w.flush();
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
         for (int i=9; i>0; --i) {
-            try {Thread.sleep(1000);} catch (InterruptedException e) {}
             w.println("say " + i + "...");
             w.flush();
+            try {Thread.sleep(1000);} catch (InterruptedException e) {}
         }
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
         w.println("say GAME OVER!!!!!!!!!!!!!");
         w.flush();
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
     }
 
     public static synchronized void backupServer() {

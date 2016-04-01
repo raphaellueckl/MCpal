@@ -17,10 +17,9 @@ public class ConsoleInput implements Runnable {
 		String msg;
 		while (!Thread.currentThread().isInterrupted()) {
 			msg = scan.nextLine();
-			System.out.println("Received command string");
 			handleCommandMessage(msg);
 		}
-		System.out.println("ConsoleWriter dies.");
+		scan.close();
 	}
 
 	private void handleCommandMessage(String msg) {
