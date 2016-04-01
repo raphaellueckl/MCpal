@@ -20,6 +20,7 @@ public class MinecraftConsole implements Runnable {
             while (!Thread.currentThread().isInterrupted()) {
                 if ((line = consoleInputReader.readLine()) == null) break;
                 System.out.println(line);
+                if (line.contains("Stopping the server")) App.isServerRunning = false;
             }
         } catch (IOException ioe) { ioe.printStackTrace(); }
     }

@@ -27,7 +27,7 @@ public class App {
 
     public static final String CONFIG_FILENAME = "MCpal.cfg";
     public static final String MCPAL_TAG = "#MCpal: ";
-    private static volatile boolean isServerRunning = false;
+    public static volatile boolean isServerRunning = false;
     public final String START_COMMAND;
 
     public static Path SOURCE_DIR_PATH;
