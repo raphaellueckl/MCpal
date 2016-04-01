@@ -32,6 +32,7 @@ public class Backup implements Callable<String> {
                 twoDigitFormat(String.valueOf(now.getHour())) + twoDigitFormat(String.valueOf(now.getMinute())));
     }
 
+    //TODO Outsource
     private static String twoDigitFormat(String term) {
         return term.length() < 2 ? "0" + term : term;
     }

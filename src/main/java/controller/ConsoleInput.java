@@ -24,7 +24,6 @@ public class ConsoleInput implements Runnable {
 	}
 
 	private void handleCommandMessage(String msg) {
-		System.out.println("check");
 		if (msg.equals("stop")) {
 			App.stopMinecraftServer(App.serverProcess, "[Server stop]", true);
 		} else if (msg.equals("istop")) {
@@ -60,6 +59,7 @@ public class ConsoleInput implements Runnable {
 	private void printToConsole(String msg) {
 		if (!sProcess.equals(App.serverProcess)) {
 			consolePrinter = new PrintWriter(App.serverProcess.getOutputStream());
+			sProcess = App.serverProcess;
 		}
 		consolePrinter.println(msg);
 		consolePrinter.flush();

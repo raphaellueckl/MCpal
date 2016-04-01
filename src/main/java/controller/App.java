@@ -44,7 +44,6 @@ public class App {
     public static void main(String... args) throws IOException, URISyntaxException {
 
         Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        System.out.println(fromPath);
         final String toPath;
         final String maxHeapSize;
         final String jarName;
@@ -180,7 +179,7 @@ public class App {
     }
 
     private void start() throws IOException {
-        serverProcess = startMinecraftServer();
+        startMinecraftServer();
 
         consoleWriterThread = new Thread(new ConsoleInput());
         consoleWriterThread.start();
@@ -195,16 +194,19 @@ public class App {
         final LocalDateTime now = LocalDateTime.now();
         LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 4, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
-        System.out.println(MCPAL_TAG + "Time until Backup starts: " + ChronoUnit.HOURS.between(now, secondsTo4AM) +
-                ":" + ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60);
+        System.out.println(MCPAL_TAG + "Time until Backup starts: " + twoDigitFormat(String.valueOf(ChronoUnit.HOURS.between(now, secondsTo4AM))) +
+                ":" + twoDigitFormat(ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60 + "h"));
         return (int) ChronoUnit.SECONDS.between(now, secondsTo4AM);
     }
 
-    public static Process startMinecraftServer() {
+    private static String twoDigitFormat(String term) {
+        return term.length() < 2 ? "0" + term : term;
+    }
+
+    public static void startMinecraftServer() {
 
         if (isServerRunning) {
             System.out.println(MCPAL_TAG + "Server is already running, please stop it first using the \"stop\"-command");
-            return null;
         } else {
 
             Process process = null;
@@ -226,8 +228,10 @@ public class App {
 
             } catch (IOException ioe) {
                 ioe.printStackTrace();
+            } finally {
+                serverProcess = process;
             }
-            return process;
+
         }
     }
 
@@ -294,7 +298,7 @@ public class App {
             }
 
             Thread.sleep(2000);
-            serverProcess = startMinecraftServer();
+            startMinecraftServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
