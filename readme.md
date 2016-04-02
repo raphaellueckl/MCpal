@@ -9,8 +9,15 @@
 - Small application (<20 KB)
 - Designed to provide function without a loss of performance
 - Automate the things you would need to do by yourself otherwise
+- Simplicity
 
-## The future ideas to this app would be:
+## You are a potential user if...
+- You only host one world
+- You like to concentrate your system performance fully on minecraft instead of supporting tools
+- Your server doesn't have that much power
+- Other tools you know are to complicated
+
+## Future ideas:
 - [x] Implement automatic server backups.
 - [x] Implement additional parameters to run other programs (like Overviewer).
 - [ ] Implement dynamic parameters to use, such as the world-name or the current backup path.
