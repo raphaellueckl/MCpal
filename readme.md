@@ -2,13 +2,18 @@
 
 ## What does it do?
 - Automatic backups once a day (currently at 4am)
+- Extendes features (while fully supporting the native commands) like manual backups
+- It's possible to automatically run other programs (like Overviewer to generate a map out of your world) after each backup
 
 ## What are the benefits?
-- Small application (11 KB)
-- Runs smoothly on weak servers
+- Small application (<20 KB)
+- Designed to provide function without a loss of performance
+- Automate the things you would need to do by yourself otherwise
 
 ## The future ideas to this app would be:
 - [x] Implement automatic server backups.
+- [x] Implement additional parameters to run other programs (like Overviewer).
+- [ ] Implement dynamic parameters to use, such as the world-name or the current backup path.
 - [ ] Implement the option to run external programs with parameters after a backup.
 - [ ] Give an optional time-parameter when the backup starts.
 - [ ] Add the possibility to do multiple backups a day.

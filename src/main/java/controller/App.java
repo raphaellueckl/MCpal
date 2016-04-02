@@ -64,7 +64,6 @@ public class App {
                 Files.delete(fromPath.resolve(CONFIG_FILENAME));
                 throwInvalidStartParametersException();
             }
-            Files.delete(Paths.get(fromPath + CONFIG_FILENAME));
             toPath = arguments.get(0);
             maxHeapSize = arguments.get(1);
             jarName = arguments.get(2);
@@ -195,7 +194,7 @@ public class App {
         LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 4, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
         System.out.println(MCPAL_TAG + "Time until Backup starts: " + twoDigitFormat(String.valueOf(ChronoUnit.HOURS.between(now, secondsTo4AM))) +
-                ":" + twoDigitFormat(ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60 + "h"));
+                ":" + twoDigitFormat(ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60 + " h"));
         return (int) ChronoUnit.SECONDS.between(now, secondsTo4AM);
     }
 
