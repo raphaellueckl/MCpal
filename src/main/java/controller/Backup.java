@@ -20,7 +20,6 @@ public class Backup implements Callable<String> {
         String backupFolderName = evaluateNewBackupFolderName();
         targetDirPath = targetDirPath.resolve(backupFolderName);
         sync(sourceDirPath);
-//        return backupFolderName;
         return targetDirPath.toString();
     }
 

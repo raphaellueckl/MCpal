@@ -44,36 +44,33 @@ public class App {
     public static void main(String... args) throws IOException, URISyntaxException {
 
         Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        final String toPath;
+        final String backupPath;
         final String maxHeapSize;
         final String jarName;
         final Path worldName;
-        final List<String> additionalPluginsToRunAfterBackup = new ArrayList<>();
-
+        final List<String> additionalPluginsToRunAfterBackup;
         if (args.length != 0) {
-            toPath = args[0];
-            maxHeapSize = args[1];
-            jarName = args[2];
-            for (int i = 3; i < args.length; ++i) {
-                additionalPluginsToRunAfterBackup.add(args[i]);
-            }
+            List<String> arguments = Arrays.asList(args);
+            backupPath = extractArgument(arguments, "b:");
+            maxHeapSize = extractArgument(arguments, "r:");
+            jarName = extractArgument(arguments, "j:");
+            if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
+            additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
             writeConfigFile(fromPath, args);
         } else if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
-            if (arguments.size() < 3) {
-                Files.delete(fromPath.resolve(CONFIG_FILENAME));
-                throwInvalidStartParametersException();
-            }
-            toPath = arguments.get(0);
-            maxHeapSize = arguments.get(1);
-            jarName = arguments.get(2);
+            Files.delete(fromPath.resolve(CONFIG_FILENAME));
+            backupPath = extractArgument(arguments, "b:");
+            maxHeapSize = extractArgument(arguments, "r:");
+            jarName = extractArgument(arguments, "j:");
+            additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
+            if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
         } else {
-            throwInvalidStartParametersException();
-            // TODO This is a workaround to keep the variables final. Doesn't work without since the throwing of the
-            // exception was outsourced.
-            toPath = null;
+            throwInvalidStartArgumentsException();
+            backupPath = null;
             maxHeapSize = null;
             jarName = null;
+            additionalPluginsToRunAfterBackup = null;
         }
 
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
@@ -83,8 +80,30 @@ public class App {
 
         checkEula(fromPath);
 
-        App MCpal = new App(fromPath, toPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
+        App MCpal = new App(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
+    }
+
+    private static boolean isOneOfThemNull(Object... objects) {
+        for (Object object : objects) {
+            if (object == null) return true;
+        }
+        return false;
+    }
+
+    private static List<String> extractAdditionalArguments(List<String> arguments) {
+        List<String> additionalArguments = new ArrayList<>();
+        for (String arg : arguments) {
+            if (arg.startsWith("a:")) additionalArguments.add(arg.substring(2, arg.length()));
+        }
+        return additionalArguments;
+    }
+
+    private static String extractArgument(List<String> arguments, String argumentPrefix) {
+        for (String arg : arguments) {
+            if (arg.startsWith(argumentPrefix)) return arg.substring(2, arg.length());
+        }
+        return null;
     }
 
     private static Path searchWorldName(Path fromPath) {
@@ -109,17 +128,16 @@ public class App {
 
     }
 
-    private static void throwInvalidStartParametersException() {
-        throw new IllegalStateException("Invalid Input Parameters. Please start this App file like this:\n" +
-                "java -jar MCpal.jar PATH_TO_BACKUP_FOLDER MAX_RAM_YOU_WANNA_SPEND NAME_OF_MINECRAFT_SERVER_JAR\n" +
-                "Example: java -jar MCpal.jar \"C:\\Users\\Rudolf Ramses\\Minecraft\" 1024 minecraft_server.jar");
+    private static void throwInvalidStartArgumentsException() {
+        throw new IllegalStateException("Invalid Input Parameters. Please start MCpal like this:\n" +
+                "java -jar MCpal.jar b:PATH_TO_BACKUP_FOLDER r:MAX_RAM j:NAME_OF_MINECRAFT_SERVER_JAR\n" +
+                "Example: java -jar MCpal.jar b:\"C:\\Users\\Rudolf Ramses\\Minecraft_Server\" r:1024 j:minecraft_server.jar");
     }
 
     private static void checkEula(Path fromPath) {
         try {
             Path eulaPath = fromPath.resolve("eula.txt");
             File eulaFile = eulaPath.toFile();
-            // TODO Irgendwie müsste die Eula generiert werden, wenn sie nicht vorhanden ist.
             if (Files.exists(eulaPath)) {
                 List<String> readAllLines = Files.readAllLines(eulaPath);
                 final StringBuilder sb = new StringBuilder();
@@ -194,7 +212,7 @@ public class App {
         LocalDateTime secondsTo4AM = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 4, 0);
         if (secondsTo4AM.isBefore(now)) secondsTo4AM = secondsTo4AM.plusDays(1);
         System.out.println(MCPAL_TAG + "Time until Backup starts: " + twoDigitFormat(String.valueOf(ChronoUnit.HOURS.between(now, secondsTo4AM))) +
-                ":" + twoDigitFormat(ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60 + " h"));
+                ":" + twoDigitFormat(String.valueOf(ChronoUnit.MINUTES.between(now, secondsTo4AM) % 60)) + " h");
         return (int) ChronoUnit.SECONDS.between(now, secondsTo4AM);
     }
 
@@ -218,10 +236,6 @@ public class App {
                 if (consoleThread != null) consoleThread.interrupt();
                 consoleThread = new Thread(new MinecraftConsole(process.getInputStream()));
                 consoleThread.start();
-
-//                if (consoleWriterThread != null) consoleWriterThread.interrupt();
-//                consoleWriterThread = new Thread(new ConsoleInput());
-//                consoleWriterThread.start();
 
                 isServerRunning = true;
 
