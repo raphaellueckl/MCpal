@@ -38,18 +38,23 @@ public class ConsoleInput implements Runnable {
 					"stop       Shutdown the server\n" +
 					"start      Start the server\n" +
 					"backup     Shutdown, backup, restart the server\n\n" +
-					"for further information about the addidtional commands, type \"help-com\"");
-		} else if (msg.equals("help-com")) {
+					"for further information about the addidtional commands, type \"help-commands\"");
+		} else if (msg.equals("help-commands")) {
 			printToConsole(
-					"You can add additional calls for programs after the usual arguments. What does this mean?\n" +
-							"You start MCpal like this: java -jar MCpal, TARGET_DIR_PATH RAM_SIZE SERVER_JAR_NAME\n" +
-							"If you want to create a map out of your backup, you can download \"Minecraft Overviewer\"\n" +
-							"and run this program externally like this:\n" +
-							"java -jar MCpal, [TARGET_DIR_PATH] [RAM_SIZE] [SERVER_JAR_NAME] \"PATH_TO_OVERVIEWER_EXE\" {1} {2}\"\n" +
-							"{1} will be replaced with the name of your world automatically\n" +
-							"{2} will be replaced with the path to the newly created backup that MCpal did.\n" +
-							"The overviewer will run in a separate thread and your minecraft server will restart\n" +
-							"right after the update.");
+					"You can add additional calls for other programs. What does this mean?\n" +
+							"If you write \"c:COMMAND\", MCpal will identify that everything after \"c:\" is a " +
+							"command that should be called in a separate process." +
+							"Example: If you installed \"Minecraft Overviewer\" and want to create a Minecraft Map " +
+							"after every backup, just use this example-command (linux):\n" +
+							"\"c:overviewer.py --rendermodes=smooth-lighting {2}/world /home/username/minecraft_server/map\"\n" +
+							"This will execute the overviewer in a separate background-process using your newly created backup.\n" +
+							"{2} is a dynamic argument. If you wanna find out what to do with them, type \"help-dynargs\"");
+		} else if (msg.equals("help-dynargs")) {
+			printToConsole("For the additional arguments, you can use some arguments that will be replaced before executing the process:\n" +
+					"{1} => The name of your minecraft-world\n" +
+					"{2} => The path to the the last backup that has been done.\n" +
+					"Example: If you write \"{2}/minecraft_server.jar\", \"{2}\" will be replaced with " +
+					"\"PATH_TO_YOUR_LAST_BACKUP/minecraft_server.jar\"");
 		} else {
 			printToConsole(msg);
 		}

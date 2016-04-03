@@ -26,3 +26,6 @@
 - [ ] Add the possibility to do multiple backups a day.
 - [ ] Space management: Set a size of the backup folder and automatically delete the oldest backups.
 - [ ] Make a "once per month" and "once per year" backup.
+
+
+## Installation:
