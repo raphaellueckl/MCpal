@@ -20,12 +20,34 @@
 ## Future ideas:
 - [x] Implement automatic server backups.
 - [x] Implement additional parameters to run other programs (like Overviewer).
-- [ ] Implement dynamic parameters to use, such as the world-name or the current backup path.
-- [ ] Implement the option to run external programs with parameters after a backup.
+- [x] Implement dynamic parameters to use, such as the world-name or the current backup path.
+- [x] Implement the option to run external programs with parameters after a backup.
 - [ ] Give an optional time-parameter when the backup starts.
-- [ ] Add the possibility to do multiple backups a day.
+- [ ] Add the possibility to do multiple automatic backups a day.
 - [ ] Space management: Set a size of the backup folder and automatically delete the oldest backups.
 - [ ] Make a "once per month" and "once per year" backup.
 
 
-## Installation:
+## Install & Run:
+!!IMPORTANT!!
+- (CAPS LOCK words need to be replaced with your own data)
+- If a path contains whitespaces (that's what the space-key creates), you need to wrap "" around it
+- You always need to use "/" in paths, even on windows, where "\" are the standard.
+
+1. Download "MCpal.jar"
+2. Move it into your minecraft server directory
+3. Open a console window and jump to the specific server directory (example: cd /home/USERNAME/minecraft_server/)
+4. Now run "java -jar MCpal.jar b:PATH_TO_BACKUP_FOLDER r:RAM_TO_ALLOCATE j:MINECRAFT_SERVER.JAR
+Example: java -jar MCpal.jar b:C:/Users/Potato/mc_backups r:1024 j:minecraft_server.jar
+5. A config file will be generated, which means that you can only call "java -jar MCpal.jar" after the first run.
+
+## Running MCpal including external programs (optional):
+This is a feature to primarily support generating a "google map" out of you minecraft world daily. You can find an
+example here: https://overviewer.org/example/#/-310/64/90/-4/0/0
+After MCpal finished a backup, it restarts the server and begins to run the additional programs that have been appended
+to it.
+
+You can add additional programs by using the parameter "a:" and append it. My setup looks like this:
+"a: overviewer.py --renderingmodes=smooth-lighting {2}/Galamor /home/Potato/Desktop/MC-Map"
+
+Let me explain a few things here
