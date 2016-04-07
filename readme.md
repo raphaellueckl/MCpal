@@ -56,6 +56,6 @@ Let me explain a few things here:
 - {2} is a dynamic parameter. It does contain the path to the newest backup folder. At all times when it is called, it will contain the very latest backup path. The available dynamic parameters are listed in the next chapter.
 
 ## Dynamic parameters:
-You can use dynamic parameters within your "a:XXXX" arguments.
-{1} = The name of the world
-{2} = The path to the most current backup
+You can use dynamic parameters within your "a:XXXX" arguments.</br>
+{1} = The name of the world</br>
+{2} = The path to the most current backup</br>
