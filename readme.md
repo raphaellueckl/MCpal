@@ -29,7 +29,7 @@
 
 
 ## Install & Run:
-!!IMPORTANT!!
+**!!IMPORTANT!!**
 - (CAPS LOCK words need to be replaced with your own data)
 - If a path contains whitespaces (that's what the space-key creates), you need to wrap "" around it
 - You always need to use "/" in paths, even on windows, where "\" are the standard.
@@ -48,6 +48,14 @@ After MCpal finished a backup, it restarts the server and begins to run the addi
 to it.
 
 You can add additional programs by using the parameter "a:" and append it. My setup looks like this:
-"a: overviewer.py --renderingmodes=smooth-lighting {2}/Galamor /home/Potato/Desktop/MC-Map"
+"a:overviewer.py --renderingmodes=smooth-lighting {2}/Galamor /home/Potato/Desktop/MC-Map"
 
-Let me explain a few things here
+Let me explain a few things here:
+- Additinal parameters can exist multiple times. If you want to run more than one program, just create another "a:XXXX" command.
+- The additional path needs to be within "" because it will contain whitespaces. Therefore, all paths that are used within must not contain whitespaces.
+- {2} is a dynamic parameter. It does contain the path to the newest backup folder. At all times when it is called, it will contain the very latest backup path. The available dynamic parameters are listed in the next chapter.
+
+## Dynamic parameters:
+You can use dynamic parameters within your "a:XXXX" arguments.
+{1} = The name of the world
+{2} = The path to the most current backup
