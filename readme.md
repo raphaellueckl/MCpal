@@ -29,10 +29,10 @@
 
 
 ## Install & Run:
-**!!IMPORTANT!!**
+**!! IMPORTANT !!**
 - (CAPS LOCK words need to be replaced with your own data)
 - If a path contains whitespaces (that's what the space-key creates), you need to wrap "" around it
-- You always need to use "/" in paths, even on windows, where "\" are the standard.
+- You must use "/" in paths, even on windows, where "\" is the standard.
 
 1. Download "MCpal.jar"
 2. Move it into your minecraft server directory
