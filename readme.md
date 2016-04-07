@@ -42,7 +42,7 @@ Example: java -jar MCpal.jar b:C:/Users/Potato/mc_backups r:1024 j:minecraft_ser
 5. A config file will be generated, which means that you can only call "java -jar MCpal.jar" after the first run.
 
 ## Running MCpal including external programs (optional):
-This is a feature to primarily support generating a "google map" out of you minecraft world daily. You can find an
+This is a feature to primarily support generating a "google map" out of you minecraft world after each backup. You can find an
 example here: https://overviewer.org/example/#/-310/64/90/-4/0/0
 After MCpal finished a backup, it restarts the server and begins to run the additional programs that have been appended
 to it.
