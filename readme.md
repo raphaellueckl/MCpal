@@ -39,7 +39,7 @@
 3. Open a console window and jump to the specific server directory (example: cd /home/USERNAME/minecraft_server/)
 4. Now run "java -jar MCpal.jar b:PATH_TO_BACKUP_FOLDER r:RAM_TO_ALLOCATE j:MINECRAFT_SERVER.JAR
 Example: java -jar MCpal.jar b:C:/Users/Potato/mc_backups r:1024 j:minecraft_server.jar
-5. A config file will be generated, which means that you can only call "java -jar MCpal.jar" after the first run.
+5. A config file will be generated, which means that from now on you can call "java -jar MCpal.jar" after the first run.
 
 ## Running MCpal including external programs (optional):
 This is a feature to primarily support generating a "google map" out of you minecraft world after each backup. You can find an
