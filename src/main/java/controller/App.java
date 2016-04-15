@@ -28,6 +28,9 @@ public class App {
     public static final String CONFIG_FILENAME = "MCpal.cfg";
     public static final String MCPAL_TAG = "#MCpal: ";
     public static volatile boolean isServerRunning = false;
+    public static String PARAMETER_BACKUP = "b:";
+    public static String PARAMETER_RAM = "r:";
+    public static String PARAMETER_JAR = "j:";
     public final String START_COMMAND;
 
     public static Path SOURCE_DIR_PATH;
@@ -51,18 +54,18 @@ public class App {
         final List<String> additionalPluginsToRunAfterBackup;
         if (args.length != 0) {
             List<String> arguments = Arrays.asList(args);
-            backupPath = extractArgument(arguments, "b:");
-            maxHeapSize = extractArgument(arguments, "r:");
-            jarName = extractArgument(arguments, "j:");
+            backupPath = extractArgument(arguments, PARAMETER_BACKUP);
+            maxHeapSize = extractArgument(arguments, PARAMETER_RAM);
+            jarName = extractArgument(arguments, PARAMETER_JAR);
             if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
             additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
             writeConfigFile(fromPath, args);
         } else if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
             Files.delete(fromPath.resolve(CONFIG_FILENAME));
-            backupPath = extractArgument(arguments, "b:");
-            maxHeapSize = extractArgument(arguments, "r:");
-            jarName = extractArgument(arguments, "j:");
+            backupPath = extractArgument(arguments, PARAMETER_BACKUP);
+            maxHeapSize = extractArgument(arguments, PARAMETER_RAM);
+            jarName = extractArgument(arguments, PARAMETER_JAR);
             additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
             if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
         } else {
