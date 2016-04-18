@@ -15,7 +15,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Additional ideas:
@@ -54,18 +56,18 @@ public class App {
         final List<String> additionalPluginsToRunAfterBackup;
         if (args.length != 0) {
             List<String> arguments = Arrays.asList(args);
-            backupPath = extractArgument(arguments, PARAMETER_BACKUP);
-            maxHeapSize = extractArgument(arguments, PARAMETER_RAM);
-            jarName = extractArgument(arguments, PARAMETER_JAR);
+            backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
+            maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
+            jarName = extractSingleArgument(arguments, PARAMETER_JAR);
             if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
             additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
             writeConfigFile(fromPath, args);
         } else if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
             Files.delete(fromPath.resolve(CONFIG_FILENAME));
-            backupPath = extractArgument(arguments, PARAMETER_BACKUP);
-            maxHeapSize = extractArgument(arguments, PARAMETER_RAM);
-            jarName = extractArgument(arguments, PARAMETER_JAR);
+            backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
+            maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
+            jarName = extractSingleArgument(arguments, PARAMETER_JAR);
             additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
             if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
         } else {
@@ -95,18 +97,17 @@ public class App {
     }
 
     private static List<String> extractAdditionalArguments(List<String> arguments) {
-        List<String> additionalArguments = new ArrayList<>();
-        for (String arg : arguments) {
-            if (arg.startsWith("a:")) additionalArguments.add(arg.substring(2, arg.length()));
-        }
-        return additionalArguments;
+        return arguments.stream()
+                .filter(a -> a.startsWith("a:"))
+                .collect(Collectors.toList());
     }
 
-    private static String extractArgument(List<String> arguments, String argumentPrefix) {
-        for (String arg : arguments) {
-            if (arg.startsWith(argumentPrefix)) return arg.substring(2, arg.length());
-        }
-        return null;
+    private static String extractSingleArgument(List<String> arguments, String argumentPrefix) {
+        return arguments.stream()
+                .filter(arg -> arg.startsWith(argumentPrefix))
+                .findFirst()
+                .map(arg -> arg.substring(2, arg.length()))
+                .orElse(null);
     }
 
     private static Path searchWorldName(Path fromPath) {
@@ -126,9 +127,8 @@ public class App {
     }
 
     private static boolean couldThisDirectoryPossiblyBeTheWorldFolder(Path currentElement) {
-        Path levelDotDatFile = currentElement.resolve("DIM1");
-        return Files.exists(levelDotDatFile);
-
+        Path dim1File = currentElement.resolve("DIM1");
+        return Files.exists(dim1File);
     }
 
     private static void throwInvalidStartArgumentsException() {
