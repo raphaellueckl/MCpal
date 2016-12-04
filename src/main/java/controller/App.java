@@ -47,15 +47,14 @@ public class App {
     public static volatile Process serverProcess;
 
     public static void main(String... args) throws IOException, URISyntaxException {
-
-        Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        final Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         final String backupPath;
         final String maxHeapSize;
         final String jarName;
         final Path worldName;
         final List<String> additionalPluginsToRunAfterBackup;
         if (args.length != 0) {
-            List<String> arguments = Arrays.asList(args);
+            final List<String> arguments = Arrays.asList(args);
             backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
             maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
             jarName = extractSingleArgument(arguments, PARAMETER_JAR);
@@ -85,7 +84,7 @@ public class App {
 
         checkEula(fromPath);
 
-        App MCpal = new App(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
+        final App MCpal = new App(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }
 
@@ -112,7 +111,7 @@ public class App {
 
     private static Path searchWorldName(Path fromPath) {
         try {
-            DirectoryStream<Path> dirStream = Files.newDirectoryStream(fromPath);
+            final DirectoryStream<Path> dirStream = Files.newDirectoryStream(fromPath);
             for (Path currentElement : dirStream) {
                 if (Files.isDirectory(currentElement) && couldThisDirectoryPossiblyBeTheWorldFolder(currentElement)) {
                     return currentElement.getFileName();
@@ -139,10 +138,10 @@ public class App {
 
     private static void checkEula(Path fromPath) {
         try {
-            Path eulaPath = fromPath.resolve("eula.txt");
-            File eulaFile = eulaPath.toFile();
+            final Path eulaPath = fromPath.resolve("eula.txt");
+            final File eulaFile = eulaPath.toFile();
             if (Files.exists(eulaPath)) {
-                List<String> readAllLines = Files.readAllLines(eulaPath);
+                final List<String> readAllLines = Files.readAllLines(eulaPath);
                 final StringBuilder sb = new StringBuilder();
                 readAllLines.forEach(line -> sb.append(line + System.getProperty("line.separator")));
                 String eula = sb.toString();
@@ -165,7 +164,7 @@ public class App {
     private static void writeConfigFile(Path fromPath, String[] args) throws IOException {
         if (!Files.exists(fromPath.resolve(CONFIG_FILENAME)))
             Files.createFile(Paths.get(fromPath + "/" + CONFIG_FILENAME));
-        FileWriter fw = new FileWriter(fromPath + "/" + CONFIG_FILENAME);
+        final FileWriter fw = new FileWriter(fromPath + "/" + CONFIG_FILENAME);
         for (String parameter : args) {
             fw.write(parameter + System.getProperty("line.separator"));
         }
