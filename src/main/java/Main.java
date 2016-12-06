@@ -1,4 +1,5 @@
-package controller;
+import controller.App;
+import controller.ConsoleSpammer;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,53 +22,54 @@ public class Main {
     public static String PARAMETER_RAM = "r:";
     public static String PARAMETER_JAR = "j:";
 
-    final Path fromPath;
-    final String backupPath;
-    final String maxHeapSize;
-    final String jarName;
-    final Path worldName;
-    final List<String> additionalPluginsToRunAfterBackup;
+    private final Path fromPath;
+    private String backupPath;
+    private String maxHeapSize;
+    private String jarName;
+    private final Path worldName;
+    private List<String> additionalPluginsToRunAfterBackup;
 
     public static void main(String[] args) throws URISyntaxException, IOException {
-        final Main main = new Main();
-        main.initialize();
+        final Main main = new Main(args);
+        main.bootServer();
     }
 
     public Main(String... args) throws IOException, URISyntaxException {
-        fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        fromPath = evaluateFromPath();
+
         if (args.length != 0) {
             final List<String> arguments = Arrays.asList(args);
-            backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
-            maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
-            jarName = extractSingleArgument(arguments, PARAMETER_JAR);
-            if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
-            additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
+            extractArgumentsFromCommandLine(arguments);
             writeConfigFile(fromPath, args);
         } else if (args.length == 0 && Files.exists(fromPath.resolve(CONFIG_FILENAME))) {
             final List<String> arguments = Files.readAllLines(fromPath.resolve(CONFIG_FILENAME));
             Files.delete(fromPath.resolve(CONFIG_FILENAME));
-            backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
-            maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
-            jarName = extractSingleArgument(arguments, PARAMETER_JAR);
-            if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
-            additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
+            extractArgumentsFromCommandLine(arguments);
         } else {
             throwInvalidStartArgumentsException();
-            backupPath = null;
-            maxHeapSize = null;
-            jarName = null;
-            additionalPluginsToRunAfterBackup = null;
         }
-
-        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
-                "Please put MCpal into your Minecraft server directory.");
 
         worldName = searchWorldName(fromPath);
 
         checkEula(fromPath);
     }
 
-    private void initialize() throws IOException {
+    private Path evaluateFromPath() throws URISyntaxException {
+        Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
+                "Please put MCpal into your Minecraft server directory.");
+        return fromPath;
+    }
+
+    private void extractArgumentsFromCommandLine(List<String> arguments) {
+        backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
+        maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
+        jarName = extractSingleArgument(arguments, PARAMETER_JAR);
+        if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
+        additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
+    }
+
+    private void bootServer() throws IOException {
         final App MCpal = new App(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }

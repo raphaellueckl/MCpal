@@ -29,7 +29,6 @@ import static model.Variables.MCPAL_TAG;
  */
 public class App {
 
-
     public static volatile boolean isServerRunning = false;
 
     public final String START_COMMAND;
@@ -44,17 +43,6 @@ public class App {
     private static Thread consoleThread;
     private static Thread consoleWriterThread;
     public static volatile Process serverProcess;
-
-    public static void main(String... args) throws IOException, URISyntaxException {
-
-    }
-
-
-
-
-
-
-
 
     public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, Path worldName, List<String> additionalThingsToRun) {
         MAX_HEAP_SIZE = maxHeapSize;
@@ -71,6 +59,10 @@ public class App {
             ADDITIONAL_COMMANDS_AFTER_BACKUP.replaceAll(command -> command.replace("{1}", WORLD_NAME.toString()));
         }
 
+        printStartupInfo();
+    }
+
+    private void printStartupInfo() {
         System.out.println("***********************");
         System.out.println("Path of the server:   " + SOURCE_DIR_PATH);
         System.out.println("Path for the backups: " + TARGET_DIR_PATH);
