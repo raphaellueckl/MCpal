@@ -17,7 +17,7 @@ public class Backup implements Callable<String> {
 
     @Override
     public String call() throws Exception {
-        String backupFolderName = evaluateNewBackupFolderName();
+        final String backupFolderName = evaluateNewBackupFolderName();
         targetDirPath = targetDirPath.resolve(backupFolderName);
         sync(sourceDirPath);
         return targetDirPath.toString();
@@ -38,12 +38,12 @@ public class Backup implements Callable<String> {
 
     private int sync(Path currentFolder) {
         try {
-            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(currentFolder);
+            final DirectoryStream<Path> directoryStream = Files.newDirectoryStream(currentFolder);
             for (final Path currentElement : directoryStream) {
                 if (Files.isDirectory(currentElement)) sync(currentElement);
                 else if (Files.isRegularFile(currentElement)) {
                     final Path relativePath = sourceDirPath.relativize(currentElement);
-                    Path targetPath = targetDirPath.resolve(relativePath);
+                    final Path targetPath = targetDirPath.resolve(relativePath);
                     if (!Files.exists(targetPath))
                         Files.createDirectories(targetPath.getParent());
                     Files.copy(currentElement, targetPath, StandardCopyOption.REPLACE_EXISTING);

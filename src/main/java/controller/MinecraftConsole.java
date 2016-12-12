@@ -1,7 +1,5 @@
 package controller;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +20,7 @@ public class MinecraftConsole implements Runnable {
             while (!Thread.currentThread().isInterrupted()) {
                 if ((line = consoleInputReader.readLine()) == null) break;
                 System.out.println(line);
-                if (line.contains("Stopping the server")) App.isServerRunning = false;
+                if (line.contains("Stopping the server")) Server.isServerRunning = false;
             }
         } catch (IOException ioe) { ioe.printStackTrace(); }
     }

@@ -1,12 +1,8 @@
 package controller;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,9 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import static model.Variables.MCPAL_TAG;
 
@@ -27,7 +21,7 @@ import static model.Variables.MCPAL_TAG;
  * - Custom parameters with default values
  * - Fix the console input
  */
-public class App {
+public class Server {
 
     public static volatile boolean isServerRunning = false;
 
@@ -44,7 +38,7 @@ public class App {
     private static Thread consoleWriterThread;
     public static volatile Process serverProcess;
 
-    public App(Path fromPath, String targetDir, String maxHeapSize, String jarName, Path worldName, List<String> additionalThingsToRun) {
+    public Server(Path fromPath, String targetDir, String maxHeapSize, String jarName, Path worldName, List<String> additionalThingsToRun) {
         MAX_HEAP_SIZE = maxHeapSize;
         JAR_NAME = jarName;
         SOURCE_DIR_PATH = fromPath;
@@ -82,7 +76,7 @@ public class App {
         final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         int oneDayInSeconds = 86400;
         int secondsUntil4Am = calculateTimeInSecondsTo4AM();
-        service.scheduleWithFixedDelay(App::backupServer, secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
+        service.scheduleWithFixedDelay(Server::backupServer, secondsUntil4Am, oneDayInSeconds, TimeUnit.SECONDS);
     }
 
     private int calculateTimeInSecondsTo4AM() {
@@ -128,7 +122,7 @@ public class App {
 
     public static void stopMinecraftServer(Process process, String reason, boolean runWithCountdown) {
         if (isServerRunning) {
-            PrintWriter consoleWriter = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
+            final PrintWriter consoleWriter = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
             if (runWithCountdown) printCountDown(consoleWriter, reason);
 
             consoleWriter.println("stop");
@@ -163,17 +157,17 @@ public class App {
 
     public static synchronized void backupServer() {
         try {
-            App.stopMinecraftServer(App.serverProcess, "[Server backup]", true);
+            Server.stopMinecraftServer(Server.serverProcess, "[Server backup]", true);
 
             Thread.sleep(2000);
 
             Files.createDirectories(SOURCE_DIR_PATH);
-            Backup backupHandler = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
-            FutureTask<String> futureTask = new FutureTask<>(backupHandler);
+            final Backup backupHandler = new Backup(SOURCE_DIR_PATH, TARGET_DIR_PATH);
+            final FutureTask<String> futureTask = new FutureTask<>(backupHandler);
             new Thread(futureTask).start();
-            String backupStorePath = futureTask.get();
+            final String backupStorePath = futureTask.get();
 
-            List<String> commandListClone = new ArrayList<>(ADDITIONAL_COMMANDS_AFTER_BACKUP);
+            final List<String> commandListClone = new ArrayList<>(ADDITIONAL_COMMANDS_AFTER_BACKUP);
             commandListClone.replaceAll(command -> command.replace("{2}", backupStorePath));
             for (String command : commandListClone) {
                 final List<String> parametersOfCommand = Arrays.asList(command.split(" "));

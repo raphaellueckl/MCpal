@@ -1,4 +1,4 @@
-import controller.App;
+import controller.Server;
 import controller.ConsoleSpammer;
 
 import java.io.File;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import static model.Variables.CONFIG_FILENAME;
 import static model.Variables.MCPAL_TAG;
 
-public class Main {
+public class Bootstrapper {
 
     public static String PARAMETER_BACKUP = "b:";
     public static String PARAMETER_RAM = "r:";
@@ -30,11 +30,11 @@ public class Main {
     private List<String> additionalPluginsToRunAfterBackup;
 
     public static void main(String[] args) throws URISyntaxException, IOException {
-        final Main main = new Main(args);
+        final Bootstrapper main = new Bootstrapper(args);
         main.bootServer();
     }
 
-    public Main(String... args) throws IOException, URISyntaxException {
+    public Bootstrapper(String... args) throws IOException, URISyntaxException {
         fromPath = evaluateFromPath();
 
         if (args.length != 0) {
@@ -55,7 +55,7 @@ public class Main {
     }
 
     private Path evaluateFromPath() throws URISyntaxException {
-        Path fromPath = Paths.get(App.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        Path fromPath = Paths.get(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
                 "Please put MCpal into your Minecraft server directory.");
         return fromPath;
@@ -70,7 +70,7 @@ public class Main {
     }
 
     private void bootServer() throws IOException {
-        final App MCpal = new App(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
+        final Server MCpal = new Server(fromPath, backupPath, maxHeapSize, jarName, worldName, additionalPluginsToRunAfterBackup);
         MCpal.start();
     }
 

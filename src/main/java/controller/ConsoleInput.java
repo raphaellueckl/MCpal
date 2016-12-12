@@ -11,9 +11,9 @@ public class ConsoleInput implements Runnable {
 
 	@Override
 	public void run() {
-		Scanner scan = new Scanner(System.in);
-		this.sProcess = App.serverProcess;
-		consolePrinter = new PrintWriter(new OutputStreamWriter(App.serverProcess.getOutputStream()));
+		final Scanner scan = new Scanner(System.in);
+		this.sProcess = Server.serverProcess;
+		consolePrinter = new PrintWriter(new OutputStreamWriter(Server.serverProcess.getOutputStream()));
 		String msg;
 		while (!Thread.currentThread().isInterrupted()) {
 			msg = scan.nextLine();
@@ -24,15 +24,15 @@ public class ConsoleInput implements Runnable {
 
 	private void handleCommandMessage(String msg) {
 		if (msg.equals("stop")) {
-			App.stopMinecraftServer(App.serverProcess, "[Server stop]", true);
+			Server.stopMinecraftServer(Server.serverProcess, "[Server stop]", true);
 		} else if (msg.equals("istop")) {
-			App.stopMinecraftServer(App.serverProcess, "[Server stop]", false);
+			Server.stopMinecraftServer(Server.serverProcess, "[Server stop]", false);
 		} else if (msg.startsWith("stop")) {
-			App.stopMinecraftServer(App.serverProcess, "[Server stop]", true);
+			Server.stopMinecraftServer(Server.serverProcess, "[Server stop]", true);
 		} else if (msg.equals("start")) {
-			App.startMinecraftServer();
+			Server.startMinecraftServer();
 		} else if (msg.equals("backup")) {
-			App.backupServer();
+			Server.backupServer();
 		} else if (msg.equals("help")) {
 			printToConsole("Here is a list of MCpal's commands you can use here on the console:\n" +
 					"stop       Shutdown the server\n" +
@@ -61,9 +61,9 @@ public class ConsoleInput implements Runnable {
 	}
 
 	private void printToConsole(String msg) {
-		if (!sProcess.equals(App.serverProcess)) {
-			consolePrinter = new PrintWriter(App.serverProcess.getOutputStream());
-			sProcess = App.serverProcess;
+		if (!sProcess.equals(Server.serverProcess)) {
+			consolePrinter = new PrintWriter(Server.serverProcess.getOutputStream());
+			sProcess = Server.serverProcess;
 		}
 		consolePrinter.println(msg);
 		consolePrinter.flush();
