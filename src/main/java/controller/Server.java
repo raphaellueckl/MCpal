@@ -1,5 +1,7 @@
 package controller;
 
+import model.Variables;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -95,7 +97,7 @@ public class Server {
     public static void startMinecraftServer() {
 
         if (isServerRunning) {
-            System.out.println(MCPAL_TAG + "Server is already running, please stop it first using the \"stop\"-command");
+            System.out.println(Variables.SERVER_ALREADY_RUNNING);
         } else {
 
             Process process = null;
@@ -137,7 +139,7 @@ public class Server {
                 isServerRunning = false;
             }
         } else {
-            System.out.println(MCPAL_TAG + "Nothing to stop. Server is not active at the moment.");
+            System.out.println(Variables.SERVER_ALREADY_STOPPED);
         }
     }
 
@@ -172,6 +174,7 @@ public class Server {
             for (String command : commandListClone) {
                 final List<String> parametersOfCommand = Arrays.asList(command.split(" "));
                 final ProcessBuilder processBuilder = new ProcessBuilder(parametersOfCommand);
+                processBuilder.environment().put(Variables.ENVIRONMENT_VARIABLE_CURRENT_BACKUP_DIR_PATH, backupStorePath);
                 new Thread(() -> {
                     try {
                         processBuilder.start();

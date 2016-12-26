@@ -1,5 +1,5 @@
 group 'MCpal'
-version '1.0-SNAPSHOT'
+version '2.0.0'
 
 apply plugin: 'java'
 
@@ -17,4 +17,15 @@ jar {
     manifest {
         attributes 'Main-Class': 'controller.App'
     }
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'McPal',
+                'Implementation-Version': version,
+                'Main-Class': 'Bootstrapper'
+    }
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

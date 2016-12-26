@@ -1,5 +1,6 @@
 import controller.Server;
 import controller.ConsoleSpammer;
+import model.Variables;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,10 +18,6 @@ import static model.Variables.CONFIG_FILENAME;
 import static model.Variables.MCPAL_TAG;
 
 public class Bootstrapper {
-
-    public static String PARAMETER_BACKUP = "b:";
-    public static String PARAMETER_RAM = "r:";
-    public static String PARAMETER_JAR = "j:";
 
     private final Path fromPath;
     private String backupPath;
@@ -56,15 +53,14 @@ public class Bootstrapper {
 
     private Path evaluateFromPath() throws URISyntaxException {
         Path fromPath = Paths.get(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        if (!Files.exists(fromPath)) throw new IllegalArgumentException("Couldn't find the Minecraft server file. " +
-                "Please put MCpal into your Minecraft server directory.");
+        if (!Files.exists(fromPath)) throw new IllegalArgumentException(Variables.SERVER_FILE_NOT_FOUND);
         return fromPath;
     }
 
     private void extractArgumentsFromCommandLine(List<String> arguments) {
-        backupPath = extractSingleArgument(arguments, PARAMETER_BACKUP);
-        maxHeapSize = extractSingleArgument(arguments, PARAMETER_RAM);
-        jarName = extractSingleArgument(arguments, PARAMETER_JAR);
+        backupPath = extractSingleArgument(arguments, Variables.BACKUP_PATH_PREFIX);
+        maxHeapSize = extractSingleArgument(arguments, Variables.RAM_PREFIX);
+        jarName = extractSingleArgument(arguments, Variables.SERVER_JAR_PREFIX);
         if (isOneOfThemNull(backupPath, maxHeapSize, jarName)) throwInvalidStartArgumentsException();
         additionalPluginsToRunAfterBackup = extractAdditionalArguments(arguments);
     }
@@ -83,7 +79,8 @@ public class Bootstrapper {
 
     private static List<String> extractAdditionalArguments(List<String> arguments) {
         return arguments.stream()
-                .filter(a -> a.startsWith("a:"))
+                .filter(a -> a.startsWith(Variables.ADDITIONAL_ARGUMENT_PREFIX))
+                .map(arg -> arg.substring(Variables.ADDITIONAL_ARGUMENT_PREFIX.length()))
                 .collect(Collectors.toList());
     }
 
@@ -91,7 +88,7 @@ public class Bootstrapper {
         return arguments.stream()
                 .filter(arg -> arg.startsWith(argumentPrefix))
                 .findFirst()
-                .map(arg -> arg.substring(2, arg.length()))
+                .map(arg -> arg.substring(argumentPrefix.length()))
                 .orElse(null);
     }
 
@@ -106,8 +103,7 @@ public class Bootstrapper {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(new ConsoleSpammer(MCPAL_TAG + "The world didn't exist when MCpal was started. Please " +
-                "restart MCpal and it will handle that.")).start();
+        new Thread(new ConsoleSpammer(Variables.WORLD_DID_NOT_EXIST)).start();
         return null;
     }
 
@@ -128,8 +124,7 @@ public class Bootstrapper {
                     fw.close();
                 }
             } else {
-                new Thread(new ConsoleSpammer(MCPAL_TAG + "NO EULA FOUND!! Just restart MCpal, the eula will be " +
-                        "set to true automatically!")).start();
+                new Thread(new ConsoleSpammer(Variables.EULA_NOT_FOUND)).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -142,9 +137,7 @@ public class Bootstrapper {
     }
 
     private static void throwInvalidStartArgumentsException() {
-        throw new IllegalStateException("Invalid Input Parameters. Please start MCpal like this:\n" +
-                "java -jar MCpal.jar b:PATH_TO_BACKUP_FOLDER r:MAX_RAM j:NAME_OF_MINECRAFT_SERVER_JAR\n" +
-                "Example: java -jar MCpal.jar b:\"C:\\Users\\Rudolf Ramses\\Minecraft_Server\" r:1024 j:minecraft_server.jar");
+        throw new IllegalStateException(Variables.INVALID_INPUT_PARAMETERS);
     }
 
     private static void writeConfigFile(Path fromPath, String[] args) throws IOException {
