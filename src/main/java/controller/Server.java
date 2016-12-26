@@ -171,11 +171,11 @@ public class Server {
 
             final List<String> commandListClone = new ArrayList<>(ADDITIONAL_COMMANDS_AFTER_BACKUP);
             commandListClone.replaceAll(command -> command.replace("{2}", backupStorePath));
-            for (String command : commandListClone) {
-                final List<String> parametersOfCommand = Arrays.asList(command.split(" "));
-                final ProcessBuilder processBuilder = new ProcessBuilder(parametersOfCommand);
-                processBuilder.environment().put(Variables.ENVIRONMENT_VARIABLE_CURRENT_BACKUP_DIR_PATH, backupStorePath);
-                new Thread(() -> {
+            new Thread(() -> {
+                for (String command : commandListClone) {
+                    final List<String> parametersOfCommand = Arrays.asList(command.split(" "));
+                    final ProcessBuilder processBuilder = new ProcessBuilder(parametersOfCommand);
+                    processBuilder.environment().put(Variables.ENVIRONMENT_VARIABLE_CURRENT_BACKUP_DIR_PATH, backupStorePath);
                     try {
                         processBuilder.start();
                         System.out.println(MCPAL_TAG + "Process successful: " + parametersOfCommand.get(0));
@@ -183,8 +183,8 @@ public class Server {
                         System.out.println(MCPAL_TAG + "The following process failed: " + command);
                         e.printStackTrace();
                     }
-                }).start();
-            }
+                }
+            }).start();
 
             Thread.sleep(2000);
             startMinecraftServer();
