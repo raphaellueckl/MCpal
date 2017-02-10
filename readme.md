@@ -48,7 +48,7 @@ Example: java -jar MCpal.jar b:C:/Users/Potato/mc_backups r:1024 j:minecraft_ser
 **Example 2 (Windows):** java -jar C:/Users/trudler/Desktop/minecraft_server.jar b:C:/users/trudler/Desktop/mc_backups r:1024 j:minecraft_server.jar
 
 **Example 3 (only for experienced users with custom needs, lol):** java -jar /home/trudler/minecraft_server/MCpal.jar b:/media/trudler/HDD/mc_backups r:1024 j:minecraft_server.jar "a:overviewer.py --config=/home/trudler/minecraft/Overviewer/overworld.conf"
-(I installed Minecraft Overviewer and the server.jar updates our map once a day. [See here]:https://overviewer.org/example/#/-310/64/90/-4/0/0 )
+(I installed Minecraft Overviewer and the server.jar updates our map once a day. [See here]: https://overviewer.org/example/#/-310/64/90/-4/0/0 )
 
 
 ## Running MCpal including external programs (optional):
